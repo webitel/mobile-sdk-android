@@ -1,0 +1,213 @@
+package com.webitel.mobile_sdk.data.auth
+
+import android.util.Log
+import com.google.protobuf.Any
+import com.webitel.mobile_sdk.data.auth.storage.AuthStorage
+import com.webitel.mobile_sdk.data.grps.AuthApi
+import com.webitel.mobile_sdk.data.grps.GrpcListener
+import com.webitel.mobile_sdk.data.grps.`is`
+import com.webitel.mobile_sdk.data.grps.pack
+import com.webitel.mobile_sdk.data.grps.unpack
+import com.webitel.mobile_sdk.data.portal.UserSession
+import com.webitel.mobile_sdk.domain.Member
+import com.webitel.mobile_sdk.domain.User
+import com.webitel.mobile_sdk.domain.CallbackListener
+import com.webitel.mobile_sdk.domain.Code
+import com.webitel.mobile_sdk.domain.Error
+import com.webitel.mobile_sdk.domain.LoginListener
+import com.webitel.mobile_sdk.domain.RegisterResult
+import webitel.portal.Account.Identity
+import webitel.portal.Auth
+import webitel.portal.Connect
+import webitel.portal.CustomerGrpc
+import webitel.portal.CustomerOuterClass.InspectRequest
+import webitel.portal.CustomerOuterClass.RegisterDeviceRequest
+import webitel.portal.CustomerOuterClass.RegisterDeviceResponse
+import webitel.portal.Push.DevicePush
+import java.util.UUID
+
+
+internal class AuthRepository(
+    private val storage: AuthStorage,
+    private val authApi: AuthApi
+) : GrpcListener {
+
+    private val requests: HashMap<String, CallbackListener<*>> = hashMapOf()
+    private var currentUser: User? = null
+
+
+    fun getToken(): AccessToken? {
+        return storage.getAccessToken()
+    }
+
+
+    @Synchronized
+    fun userLogin(appToken: String, user: User, callback: CallbackListener<UserSession>) {
+        try {
+            val identity = Identity
+                .newBuilder()
+                .setIss(user.iss)
+                .setSub(user.sub)
+                .setName(user.name)
+                .build()
+
+            authApi.login(appToken, identity, object : CallbackListener<LoginResponse> {
+                override fun onSuccess(r: LoginResponse) {
+                    currentUser = user
+                    storage.saveAccessToken(r.token)
+                    callback.onSuccess(r.session)
+                }
+
+                override fun onError(e: Error) {
+                    callback.onError(e)
+                }
+            })
+
+        } catch (e: Exception) {
+            callback.onError(
+                Error(
+                    e.message.toString(),
+                    code = Code.UNKNOWN
+                )
+            )
+        }
+    }
+
+
+    @Synchronized
+    fun logout(callback: LoginListener) {
+        authApi.logout(object : CallbackListener<Unit> {
+            override fun onSuccess(t: Unit) {
+                destroy()
+                callback.onLogoutFinished()
+            }
+
+            override fun onError(e: Error) {
+                callback.onError(e)
+            }
+        })
+    }
+
+
+    @Synchronized
+    fun getSession(callback: CallbackListener<UserSession>) {
+        if (authApi.isStreamOpened()) {
+            val reqId = UUID.randomUUID().toString()
+            val i = InspectRequest
+                .newBuilder()
+                .build()
+            val request = Connect.Request.newBuilder()
+                .setId(reqId)
+                .setPath(CustomerGrpc.getInspectMethod().bareMethodName)
+                .setData(Any.newBuilder().pack(i))
+                .build()
+            requests[reqId] = callback
+            authApi.sendMessage(request)
+        } else {
+            authApi.inspect(callback)
+        }
+    }
+
+
+    fun registerFcm(token: String, callback: CallbackListener<RegisterResult>) {
+        if (authApi.isStreamOpened()) {
+            val d = DevicePush.newBuilder().setFCM(token).build()
+            val reqId = UUID.randomUUID().toString()
+            val i = RegisterDeviceRequest
+                .newBuilder()
+                .setPush(d)
+                .build()
+            val request = Connect.Request.newBuilder()
+                .setId(reqId)
+                .setPath(CustomerGrpc.getRegisterDeviceMethod().bareMethodName)
+                .setData(Any.newBuilder().pack(i))
+                .build()
+            requests[reqId] = callback
+            authApi.sendMessage(request)
+        } else {
+            authApi.registerFcm(token, callback)
+        }
+    }
+
+
+    private fun destroy() {
+        storage.clear()
+    }
+
+
+    override fun onResponse(response: Connect.Response) {
+        val request = requests.remove(response.id)
+            ?: return
+
+        if (!response.err.message.isNullOrEmpty()) {
+            Log.e(
+                "err.",
+                "${response.err.message}; code - ${response.err.code}"
+            )
+            request.onError(
+                Error(
+                    message = response.err.message,
+                    code = Code.forNumber(response.err.code)
+                )
+            )
+
+        } else {
+            if (response.data.`is`(Auth.AccessToken::class.java)) {
+
+                val s = response.data.unpack(Auth.AccessToken::class.java)
+                if (s == null) {
+                    request.onError(
+                        Error(
+                            message = "Could not UNPACK the response. ${response.data.typeUrl}",
+                            code = Code.DATA_LOSS
+                        )
+                    )
+                    return
+                }
+
+                val chatAccount = if (s.chat != null && s.chat.user != null) {
+                    Member(
+                        id = s.chat.user.id,
+                        name = s.chat.user.name,
+                        type = s.chat.user.type
+                    )
+                } else null
+
+                try {
+                    request as CallbackListener<UserSession>
+                    request.onSuccess(
+                        UserSession(
+                            user = User(
+                                iss = s.user.identity.iss,
+                                sub = s.user.identity.sub,
+                                name = s.user.identity.name
+                            ),
+                            isChatAvailable = s.scopeList.contains("chat"),
+                            isVoiceAvailable = s.scopeList.contains("call"),
+                            isPushEnabled = false,
+                            chatAccount
+                        )
+                    )
+                }catch (_: Exception){}
+            } else if (response.data.`is`(RegisterDeviceResponse::class.java)) {
+                try {
+                    request as CallbackListener<RegisterResult>
+                    request.onSuccess(
+                        RegisterResult()
+                    )
+                }catch (_: Exception){}
+            }
+        }
+    }
+
+
+    override fun onConnectionError(e: Error) {
+        requests.forEach {
+            it.value.onError(e)
+            requests.remove(it.key)
+        }
+    }
+
+
+    override fun onConnectionReady() {}
+}

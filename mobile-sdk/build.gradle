@@ -1,0 +1,126 @@
+plugins {
+    id 'com.android.library'
+    id 'kotlin-android'
+    id 'maven-publish'
+    id("com.google.protobuf")
+}
+
+android {
+    compileSdk 33
+    defaultConfig {
+        minSdk 24
+        targetSdk 33
+        consumerProguardFiles "consumer-rules.pro"
+    }
+
+    lintOptions {
+        abortOnError false
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    kotlinOptions {
+        jvmTarget = '1.8'
+    }
+
+    sourceSets {
+        main {
+            proto {
+                srcDirs("src/main/proto")
+            }
+            java {
+                java.srcDir("build/generated/source/proto/main/java")
+                java.srcDir("build/generated/source/proto/main/grpc")
+                java.srcDir("build/generated/source/proto/main/grpckt")
+            }
+        }
+    }
+}
+
+
+protobuf {
+    protoc {
+        artifact = "com.google.protobuf:protoc:3.20.1"
+    }
+    plugins {
+        grpc { artifact = 'io.grpc:protoc-gen-grpc-java:1.47.0'
+        }
+    }
+    generateProtoTasks {
+        all().each { task ->
+            task.builtins {
+                java { option 'lite' }
+            }
+            task.plugins {
+                grpc {
+                    option 'lite' }
+            }
+        }
+    }
+}
+
+
+dependencies {
+    implementation 'androidx.core:core-ktx:1.8.0'
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+
+    implementation 'com.google.code.gson:gson:2.10.1'
+    implementation 'com.squareup.okhttp3:okhttp:4.2.1'
+
+    //grpc dependency
+    implementation 'io.grpc:grpc-okhttp:1.47.0'
+    implementation 'io.grpc:grpc-protobuf-lite:1.47.0'
+    implementation 'io.grpc:grpc-stub:1.47.0'
+    implementation 'org.apache.tomcat:annotations-api:6.0.53'
+
+    implementation "androidx.security:security-crypto:1.1.0-alpha06"
+
+    testImplementation "org.robolectric:robolectric:4.9.2"
+    androidTestImplementation 'androidx.test.ext:junit:1.1.5'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
+}
+
+
+//task to delete the old jar
+task deleteOldJar(type: Delete) {
+    delete 'libs/webitel_portal.jar'
+}
+
+
+project.ext.reanimated = [
+        buildFromSource: true
+]
+
+//task to export contents as jar
+task exportJar(type: Copy) {
+    from('build/intermediates/compile_library_classes_jar/release/')
+    into('libs/')
+    include('classes.jar')
+    rename('classes.jar', 'webitel_portal.jar')
+}
+
+
+afterEvaluate {
+    android.libraryVariants.each { variant ->
+        publishing.publications.create(variant.name, MavenPublication){
+            from components.findByName(variant.name)
+
+            groupId = "com.webitel"
+            artifactId = "mobile-sdk"
+            version = "0.2.5"
+        }
+    }
+}
+
+
+exportJar.dependsOn(deleteOldJar, build)

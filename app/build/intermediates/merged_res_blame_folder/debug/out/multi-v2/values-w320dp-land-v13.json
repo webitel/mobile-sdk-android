@@ -1,0 +1,19 @@
+{
+    "logs": [
+        {
+            "outputFile": "com.webitel.simple.app-mergeDebugResources-27:/values-w320dp-land-v13/values-w320dp-land-v13.xml",
+            "map": [
+                {
+                    "source": "/Users/yuriizhuk/.gradle/caches/transforms-3/8eb4390310cdf537a1e8dd0eb504ea47/transformed/material-1.6.0/res/values-w320dp-land-v13/values-w320dp-land-v13.xml",
+                    "from": {
+                        "startLines": "2,3",
+                        "startColumns": "4,4",
+                        "startOffsets": "55,110",
+                        "endColumns": "54,61",
+                        "endOffsets": "105,167"
+                    }
+                }
+            ]
+        }
+    ]
+}
