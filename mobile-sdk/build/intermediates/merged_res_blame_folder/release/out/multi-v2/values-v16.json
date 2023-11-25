@@ -1,0 +1,72 @@
+{
+    "logs": [
+        {
+            "outputFile": "com.webitel.mobile_sdk.mobile-sdk-merged_res-21:/values-v16/values-v16.xml",
+            "map": [
+                {
+                    "source": "/Users/yuriizhuk/.gradle/caches/transforms-3/d35986eef2250f862d45564bca726e0a/transformed/appcompat-1.6.1/res/values-v16/values-v16.xml",
+                    "from": {
+                        "startLines": "2",
+                        "startColumns": "4",
+                        "startOffsets": "55",
+                        "endLines": "5",
+                        "endColumns": "12",
+                        "endOffsets": "223"
+                    },
+                    "to": {
+                        "startLines": "3",
+                        "startColumns": "4",
+                        "startOffsets": "121",
+                        "endLines": "6",
+                        "endColumns": "12",
+                        "endOffsets": "289"
+                    }
+                },
+                {
+                    "source": "/Users/yuriizhuk/.gradle/caches/transforms-3/2c19b7f6e4b2982c5fdf1a20c53e8ac0/transformed/core-1.9.0/res/values-v16/values-v16.xml",
+                    "from": {
+                        "startLines": "2",
+                        "startColumns": "4",
+                        "startOffsets": "55",
+                        "endColumns": "65",
+                        "endOffsets": "116"
+                    }
+                }
+            ]
+        },
+        {
+            "outputFile": "com.webitel.mobile_sdk.mobile-sdk-mergeReleaseResources-19:/values-v16/values-v16.xml",
+            "map": [
+                {
+                    "source": "/Users/yuriizhuk/.gradle/caches/transforms-3/d35986eef2250f862d45564bca726e0a/transformed/appcompat-1.6.1/res/values-v16/values-v16.xml",
+                    "from": {
+                        "startLines": "2",
+                        "startColumns": "4",
+                        "startOffsets": "55",
+                        "endLines": "5",
+                        "endColumns": "12",
+                        "endOffsets": "223"
+                    },
+                    "to": {
+                        "startLines": "3",
+                        "startColumns": "4",
+                        "startOffsets": "121",
+                        "endLines": "6",
+                        "endColumns": "12",
+                        "endOffsets": "289"
+                    }
+                },
+                {
+                    "source": "/Users/yuriizhuk/.gradle/caches/transforms-3/2c19b7f6e4b2982c5fdf1a20c53e8ac0/transformed/core-1.9.0/res/values-v16/values-v16.xml",
+                    "from": {
+                        "startLines": "2",
+                        "startColumns": "4",
+                        "startOffsets": "55",
+                        "endColumns": "65",
+                        "endOffsets": "116"
+                    }
+                }
+            ]
+        }
+    ]
+}

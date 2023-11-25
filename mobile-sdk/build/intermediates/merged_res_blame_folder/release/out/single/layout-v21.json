@@ -1,0 +1,18 @@
+[
+    {
+        "merged": "com.webitel.mobile_sdk.mobile-sdk-merged_res-21:/layout-v21/notification_template_custom_big.xml",
+        "source": "com.webitel.mobile_sdk.mobile-sdk-core-1.9.0-2:/layout-v21/notification_template_custom_big.xml"
+    },
+    {
+        "merged": "com.webitel.mobile_sdk.mobile-sdk-merged_res-21:/layout-v21/notification_action_tombstone.xml",
+        "source": "com.webitel.mobile_sdk.mobile-sdk-core-1.9.0-2:/layout-v21/notification_action_tombstone.xml"
+    },
+    {
+        "merged": "com.webitel.mobile_sdk.mobile-sdk-merged_res-21:/layout-v21/notification_action.xml",
+        "source": "com.webitel.mobile_sdk.mobile-sdk-core-1.9.0-2:/layout-v21/notification_action.xml"
+    },
+    {
+        "merged": "com.webitel.mobile_sdk.mobile-sdk-merged_res-21:/layout-v21/notification_template_icon_group.xml",
+        "source": "com.webitel.mobile_sdk.mobile-sdk-core-1.9.0-2:/layout-v21/notification_template_icon_group.xml"
+    }
+]

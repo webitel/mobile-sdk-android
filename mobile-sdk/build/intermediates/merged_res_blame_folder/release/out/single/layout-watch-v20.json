@@ -1,0 +1,10 @@
+[
+    {
+        "merged": "com.webitel.mobile_sdk.mobile-sdk-merged_res-21:/layout-watch-v20/abc_alert_dialog_title_material.xml",
+        "source": "com.webitel.mobile_sdk.mobile-sdk-appcompat-1.6.1-12:/layout-watch-v20/abc_alert_dialog_title_material.xml"
+    },
+    {
+        "merged": "com.webitel.mobile_sdk.mobile-sdk-merged_res-21:/layout-watch-v20/abc_alert_dialog_button_bar_material.xml",
+        "source": "com.webitel.mobile_sdk.mobile-sdk-appcompat-1.6.1-12:/layout-watch-v20/abc_alert_dialog_button_bar_material.xml"
+    }
+]

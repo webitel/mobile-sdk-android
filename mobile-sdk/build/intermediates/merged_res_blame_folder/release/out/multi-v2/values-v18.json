@@ -1,0 +1,34 @@
+{
+    "logs": [
+        {
+            "outputFile": "com.webitel.mobile_sdk.mobile-sdk-mergeReleaseResources-19:/values-v18/values-v18.xml",
+            "map": [
+                {
+                    "source": "/Users/yuriizhuk/.gradle/caches/transforms-3/d35986eef2250f862d45564bca726e0a/transformed/appcompat-1.6.1/res/values-v18/values-v18.xml",
+                    "from": {
+                        "startLines": "2",
+                        "startColumns": "4",
+                        "startOffsets": "55",
+                        "endColumns": "48",
+                        "endOffsets": "99"
+                    }
+                }
+            ]
+        },
+        {
+            "outputFile": "com.webitel.mobile_sdk.mobile-sdk-merged_res-21:/values-v18/values-v18.xml",
+            "map": [
+                {
+                    "source": "/Users/yuriizhuk/.gradle/caches/transforms-3/d35986eef2250f862d45564bca726e0a/transformed/appcompat-1.6.1/res/values-v18/values-v18.xml",
+                    "from": {
+                        "startLines": "2",
+                        "startColumns": "4",
+                        "startOffsets": "55",
+                        "endColumns": "48",
+                        "endOffsets": "99"
+                    }
+                }
+            ]
+        }
+    ]
+}

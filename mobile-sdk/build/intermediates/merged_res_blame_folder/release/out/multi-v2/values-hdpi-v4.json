@@ -1,0 +1,36 @@
+{
+    "logs": [
+        {
+            "outputFile": "com.webitel.mobile_sdk.mobile-sdk-merged_res-21:/values-hdpi-v4/values-hdpi-v4.xml",
+            "map": [
+                {
+                    "source": "/Users/yuriizhuk/.gradle/caches/transforms-3/d35986eef2250f862d45564bca726e0a/transformed/appcompat-1.6.1/res/values-hdpi-v4/values-hdpi-v4.xml",
+                    "from": {
+                        "startLines": "2",
+                        "startColumns": "4",
+                        "startOffsets": "55",
+                        "endLines": "6",
+                        "endColumns": "13",
+                        "endOffsets": "327"
+                    }
+                }
+            ]
+        },
+        {
+            "outputFile": "com.webitel.mobile_sdk.mobile-sdk-mergeReleaseResources-19:/values-hdpi-v4/values-hdpi-v4.xml",
+            "map": [
+                {
+                    "source": "/Users/yuriizhuk/.gradle/caches/transforms-3/d35986eef2250f862d45564bca726e0a/transformed/appcompat-1.6.1/res/values-hdpi-v4/values-hdpi-v4.xml",
+                    "from": {
+                        "startLines": "2",
+                        "startColumns": "4",
+                        "startOffsets": "55",
+                        "endLines": "6",
+                        "endColumns": "13",
+                        "endOffsets": "327"
+                    }
+                }
+            ]
+        }
+    ]
+}

@@ -1,0 +1,26 @@
+[
+    {
+        "merged": "com.webitel.mobile_sdk.mobile-sdk-merged_res-21:/animator/fragment_fade_exit.xml",
+        "source": "com.webitel.mobile_sdk.mobile-sdk-fragment-1.3.6-6:/animator/fragment_fade_exit.xml"
+    },
+    {
+        "merged": "com.webitel.mobile_sdk.mobile-sdk-merged_res-21:/animator/fragment_close_exit.xml",
+        "source": "com.webitel.mobile_sdk.mobile-sdk-fragment-1.3.6-6:/animator/fragment_close_exit.xml"
+    },
+    {
+        "merged": "com.webitel.mobile_sdk.mobile-sdk-merged_res-21:/animator/fragment_fade_enter.xml",
+        "source": "com.webitel.mobile_sdk.mobile-sdk-fragment-1.3.6-6:/animator/fragment_fade_enter.xml"
+    },
+    {
+        "merged": "com.webitel.mobile_sdk.mobile-sdk-merged_res-21:/animator/fragment_open_exit.xml",
+        "source": "com.webitel.mobile_sdk.mobile-sdk-fragment-1.3.6-6:/animator/fragment_open_exit.xml"
+    },
+    {
+        "merged": "com.webitel.mobile_sdk.mobile-sdk-merged_res-21:/animator/fragment_open_enter.xml",
+        "source": "com.webitel.mobile_sdk.mobile-sdk-fragment-1.3.6-6:/animator/fragment_open_enter.xml"
+    },
+    {
+        "merged": "com.webitel.mobile_sdk.mobile-sdk-merged_res-21:/animator/fragment_close_enter.xml",
+        "source": "com.webitel.mobile_sdk.mobile-sdk-fragment-1.3.6-6:/animator/fragment_close_enter.xml"
+    }
+]

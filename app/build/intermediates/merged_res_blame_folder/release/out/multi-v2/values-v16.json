@@ -1,0 +1,38 @@
+{
+    "logs": [
+        {
+            "outputFile": "com.webitel.simple.app-mergeReleaseResources-27:/values-v16/values-v16.xml",
+            "map": [
+                {
+                    "source": "/Users/yuriizhuk/.gradle/caches/transforms-3/506e60d2bcc85761c7ae06636a622561/transformed/appcompat-1.5.1/res/values-v16/values-v16.xml",
+                    "from": {
+                        "startLines": "2",
+                        "startColumns": "4",
+                        "startOffsets": "55",
+                        "endLines": "5",
+                        "endColumns": "12",
+                        "endOffsets": "223"
+                    },
+                    "to": {
+                        "startLines": "3",
+                        "startColumns": "4",
+                        "startOffsets": "121",
+                        "endLines": "6",
+                        "endColumns": "12",
+                        "endOffsets": "289"
+                    }
+                },
+                {
+                    "source": "/Users/yuriizhuk/.gradle/caches/transforms-3/68d6f654986b5ca77173753480b11b73/transformed/core-1.8.0/res/values-v16/values-v16.xml",
+                    "from": {
+                        "startLines": "2",
+                        "startColumns": "4",
+                        "startOffsets": "55",
+                        "endColumns": "65",
+                        "endOffsets": "116"
+                    }
+                }
+            ]
+        }
+    ]
+}
