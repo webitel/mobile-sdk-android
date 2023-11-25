@@ -110,33 +110,33 @@ task exportJar(type: Copy) {
 }
 
 
-//afterEvaluate {
-//    android.libraryVariants.each { variant ->
-//        publishing.publications.create(variant.name, MavenPublication){
-//            from components.findByName(variant.name)
-//
-//            groupId = "com.webitel"
-//            artifactId = "mobile-sdk"
-//            version = "0.2.5"
-//        }
-//    }
-//}
+afterEvaluate {
+    android.libraryVariants.each { variant ->
+        publishing.publications.create(variant.name, MavenPublication){
+            from components.findByName(variant.name)
 
-publishing {
-    publications {
-        maven(MavenPublication) {
-            groupId = 'com.github.webitel'
-            artifactId = 'mobile-sdk'
-            version = "0.2.3"
-            pom {
-                description = 'Webitel Mobile SDK'
-            }
+            groupId = "com.webitel"
+            artifactId = "mobile-sdk"
+            version = "0.2.5"
         }
     }
-    repositories {
-        mavenLocal()
-    }
 }
+
+//publishing {
+//    publications {
+//        maven(MavenPublication) {
+//            groupId = 'com.github.webitel'
+//            artifactId = 'mobile-sdk'
+//            version = "0.2.3"
+//            pom {
+//                description = 'Webitel Mobile SDK'
+//            }
+//        }
+//    }
+//    repositories {
+//        mavenLocal()
+//    }
+//}
 
 
 exportJar.dependsOn(deleteOldJar, build)

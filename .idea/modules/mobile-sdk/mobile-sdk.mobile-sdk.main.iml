@@ -26,7 +26,6 @@
           <stringArguments>
             <stringArg name="classpath">
               <args>
-                <arg>$MODULE_DIR$/../../../mobile-sdk/build/intermediates/compile_r_class_jar/debug/R.jar</arg>
                 <arg>$USER_HOME$/.gradle/caches/transforms-3/d0a39fb0d67a4e51665b7b30c8751076/transformed/appcompat-1.6.1-api.jar</arg>
                 <arg>$USER_HOME$/.gradle/caches/transforms-3/899be92d7a5bea0fcb4c77f98afea277/transformed/fragment-1.3.6-api.jar</arg>
                 <arg>$USER_HOME$/.gradle/caches/transforms-3/be8106b7148b3c4351660a580fb47a2c/transformed/jetified-activity-1.6.0-api.jar</arg>
