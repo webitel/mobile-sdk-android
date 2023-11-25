@@ -110,15 +110,31 @@ task exportJar(type: Copy) {
 }
 
 
-afterEvaluate {
-    android.libraryVariants.each { variant ->
-        publishing.publications.create(variant.name, MavenPublication){
-            from components.findByName(variant.name)
+//afterEvaluate {
+//    android.libraryVariants.each { variant ->
+//        publishing.publications.create(variant.name, MavenPublication){
+//            from components.findByName(variant.name)
+//
+//            groupId = "com.webitel"
+//            artifactId = "mobile-sdk"
+//            version = "0.2.5"
+//        }
+//    }
+//}
 
-            groupId = "com.webitel"
-            artifactId = "mobile-sdk"
-            version = "0.2.5"
+publishing {
+    publications {
+        maven(MavenPublication) {
+            groupId = 'com.github.webitel'
+            artifactId = 'mobile-sdk'
+            version = "0.2.3"
+            pom {
+                description = 'Webitel Mobile SDK'
+            }
         }
+    }
+    repositories {
+        mavenLocal()
     }
 }
 
