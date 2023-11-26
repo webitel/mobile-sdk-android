@@ -1,8 +1,8 @@
 -- Merging decision tree log ---
 manifest
-ADDED from /Users/yuriizhuk/Developer/android/CustomerServiceSDK/mobile-sdk/src/main/AndroidManifest.xml:2:1-26:12
-INJECTED from /Users/yuriizhuk/Developer/android/CustomerServiceSDK/mobile-sdk/src/main/AndroidManifest.xml:2:1-26:12
-INJECTED from /Users/yuriizhuk/Developer/android/CustomerServiceSDK/mobile-sdk/src/main/AndroidManifest.xml:2:1-26:12
+ADDED from /Users/yuriizhuk/Developer/android/CustomerServiceSDK/mobile-sdk/src/main/AndroidManifest.xml:2:1-27:12
+INJECTED from /Users/yuriizhuk/Developer/android/CustomerServiceSDK/mobile-sdk/src/main/AndroidManifest.xml:2:1-27:12
+INJECTED from /Users/yuriizhuk/Developer/android/CustomerServiceSDK/mobile-sdk/src/main/AndroidManifest.xml:2:1-27:12
 	package
 		ADDED from /Users/yuriizhuk/Developer/android/CustomerServiceSDK/mobile-sdk/src/main/AndroidManifest.xml:3:5-37
 		INJECTED from /Users/yuriizhuk/Developer/android/CustomerServiceSDK/mobile-sdk/src/main/AndroidManifest.xml
