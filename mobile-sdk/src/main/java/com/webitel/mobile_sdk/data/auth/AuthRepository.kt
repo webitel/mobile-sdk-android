@@ -174,17 +174,17 @@ internal class AuthRepository(
                 } else null
 
                 try {
+                    val user = User.Builder(
+                        iss = s.user.identity.iss,
+                        sub = s.user.identity.sub,
+                        name = s.user.identity.name
+                    ).build()
                     request as CallbackListener<UserSession>
                     request.onSuccess(
                         UserSession(
-                            user = User(
-                                iss = s.user.identity.iss,
-                                sub = s.user.identity.sub,
-                                name = s.user.identity.name
-                            ),
+                            user = user,
                             isChatAvailable = s.scopeList.contains("chat"),
                             isVoiceAvailable = s.scopeList.contains("call"),
-                            isPushEnabled = false,
                             chatAccount
                         )
                     )

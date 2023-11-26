@@ -9,6 +9,5 @@ internal class UserSession(
     override val user: User,
     override val isChatAvailable: Boolean,
     override val isVoiceAvailable: Boolean,
-    override val isPushEnabled: Boolean,
     val chatAccount: Member?
 ) : Session

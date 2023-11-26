@@ -45,6 +45,34 @@ android {
             }
         }
     }
+
+//    allprojects {
+//        tasks.withType(JavaCompile).tap {
+//            configureEach {
+//                options.compilerArgs << "-Xlint:deprecation"
+//            }
+//        }
+//    }
+}
+
+
+dependencies {
+    implementation 'androidx.core:core-ktx:1.8.0'
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'com.google.code.gson:gson:2.10.1'
+    implementation 'com.squareup.okhttp3:okhttp:4.2.1'
+
+    //grpc dependency
+    implementation 'io.grpc:grpc-okhttp:1.47.0'
+    implementation 'io.grpc:grpc-protobuf-lite:1.47.0'
+    implementation 'io.grpc:grpc-stub:1.47.0'
+    implementation 'org.apache.tomcat:annotations-api:6.0.53'
+
+    implementation "androidx.security:security-crypto:1.1.0-alpha06"
+
+    testImplementation "org.robolectric:robolectric:4.9.2"
+    androidTestImplementation 'androidx.test.ext:junit:1.1.5'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
 }
 
 
@@ -70,44 +98,22 @@ protobuf {
 }
 
 
-dependencies {
-    implementation 'androidx.core:core-ktx:1.8.0'
-    implementation 'androidx.appcompat:appcompat:1.6.1'
-
-    implementation 'com.google.code.gson:gson:2.10.1'
-    implementation 'com.squareup.okhttp3:okhttp:4.2.1'
-
-    //grpc dependency
-    implementation 'io.grpc:grpc-okhttp:1.47.0'
-    implementation 'io.grpc:grpc-protobuf-lite:1.47.0'
-    implementation 'io.grpc:grpc-stub:1.47.0'
-    implementation 'org.apache.tomcat:annotations-api:6.0.53'
-
-    implementation "androidx.security:security-crypto:1.1.0-alpha06"
-
-    testImplementation "org.robolectric:robolectric:4.9.2"
-    androidTestImplementation 'androidx.test.ext:junit:1.1.5'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
+tasks.register('deleteOldJar', Delete) {
+    delete 'libs/webitel_portal.jar'
 }
 
 
-//task to delete the old jar
-task deleteOldJar(type: Delete) {
-    delete 'libs/webitel_portal.jar'
+tasks.register('exportJar', Copy) {
+    from('build/intermediates/compile_library_classes_jar/release/')
+    into('libs/')
+    include('classes.jar')
+    rename('classes.jar', 'webitel_portal.jar')
 }
 
 
 project.ext.reanimated = [
         buildFromSource: true
 ]
-
-//task to export contents as jar
-task exportJar(type: Copy) {
-    from('build/intermediates/compile_library_classes_jar/release/')
-    into('libs/')
-    include('classes.jar')
-    rename('classes.jar', 'webitel_portal.jar')
-}
 
 
 afterEvaluate {
@@ -121,22 +127,6 @@ afterEvaluate {
         }
     }
 }
-
-//publishing {
-//    publications {
-//        maven(MavenPublication) {
-//            groupId = 'com.github.webitel'
-//            artifactId = 'mobile-sdk'
-//            version = "0.2.3"
-//            pom {
-//                description = 'Webitel Mobile SDK'
-//            }
-//        }
-//    }
-//    repositories {
-//        mavenLocal()
-//    }
-//}
 
 
 exportJar.dependsOn(deleteOldJar, build)

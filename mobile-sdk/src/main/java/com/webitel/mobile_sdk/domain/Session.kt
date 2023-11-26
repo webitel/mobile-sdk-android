@@ -7,5 +7,5 @@ interface Session {
     val isChatAvailable: Boolean
     val isVoiceAvailable: Boolean
 
-    val isPushEnabled: Boolean
+    //val isPushEnabled: Boolean
 }

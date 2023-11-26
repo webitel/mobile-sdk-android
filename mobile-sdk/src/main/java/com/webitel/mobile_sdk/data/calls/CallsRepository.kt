@@ -243,36 +243,6 @@ internal class CallsRepository private constructor() {
     }
 
 
-    private fun loadNativeLibraries() {
-        try {
-            System.loadLibrary("c++_shared")
-            Log.d("loadNativeLibraries", "libc++_shared loaded")
-        } catch (error: UnsatisfiedLinkError) {
-            Log.e(
-                "loadNativeLibraries",
-                "Error while loading libc++_shared native library",
-                error
-            )
-        }
-//        try {
-//            System.loadLibrary("openh264")
-//            Log.d(TAG, "OpenH264 loaded")
-//        } catch (error: UnsatisfiedLinkError) {
-//            Log.e(TAG, "Error while loading OpenH264 native library", error)
-//        }
-        try {
-            System.loadLibrary("pjsua2")
-            Log.d("loadNativeLibraries", "PJSIP pjsua2 loaded")
-        } catch (error: UnsatisfiedLinkError) {
-            Log.e(
-                "loadNativeLibraries",
-                "Error while loading PJSIP pjsua2 native library",
-                error
-            )
-        }
-    }
-
-
     internal companion object : Constants {
         val instance = CallsRepository()
         var activeCalls: HashMap<String, WebitelCall> = HashMap()

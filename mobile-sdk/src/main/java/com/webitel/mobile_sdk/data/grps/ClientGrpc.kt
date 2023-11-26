@@ -475,15 +475,16 @@ internal class ClientGrpc(
                 type = value.chat.user.type
             )
         } else null
+
+        val user = User.Builder(
+            iss = value.user.identity.iss,
+            sub = value.user.identity.sub,
+            name = value.user.identity.name
+        ).build()
         return UserSession(
-            user = User(
-                iss = value.user.identity.iss,
-                sub = value.user.identity.sub,
-                name = value.user.identity.name
-            ),
+            user = user,
             isChatAvailable = value.scopeList.contains("chat"),
             isVoiceAvailable = value.scopeList.contains("call"),
-            isPushEnabled = false,
             chatAccount
         )
     }
