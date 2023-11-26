@@ -1,6 +1,6 @@
 package com.webitel.mobile_sdk.data.chats
 
-import com.webitel.mobile_sdk.domain.ChatListener
+import com.webitel.mobile_sdk.domain.DialogListener
 import com.webitel.mobile_sdk.domain.Message
 import com.webitel.mobile_sdk.domain.CallbackListener
 import com.webitel.mobile_sdk.domain.Dialog
@@ -46,12 +46,12 @@ internal class WebitelDialog(
     }
 
 
-    override fun addListener(listener: ChatListener) {
+    override fun addListener(listener: DialogListener) {
         listeners.addListener(listener)
     }
 
 
-    override fun removeListener(listener: ChatListener) {
+    override fun removeListener(listener: DialogListener) {
         listeners.removeListener(listener)
     }
 

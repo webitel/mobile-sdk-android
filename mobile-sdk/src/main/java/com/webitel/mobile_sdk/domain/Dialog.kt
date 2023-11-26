@@ -13,7 +13,7 @@ interface Dialog {
 
     fun sendMessage(message: Message.options, callback: MessageCallbackListener)
 
-    fun addListener(listener: ChatListener)
-    fun removeListener(listener: ChatListener)
+    fun addListener(listener: DialogListener)
+    fun removeListener(listener: DialogListener)
     fun removeAllListeners()
 }

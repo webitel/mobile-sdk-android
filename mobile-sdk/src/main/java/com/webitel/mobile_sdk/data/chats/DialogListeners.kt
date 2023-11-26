@@ -1,24 +1,24 @@
 package com.webitel.mobile_sdk.data.chats
 
-import com.webitel.mobile_sdk.domain.ChatListener
+import com.webitel.mobile_sdk.domain.DialogListener
 import com.webitel.mobile_sdk.domain.Member
 import com.webitel.mobile_sdk.domain.Message
 
 
 internal class DialogListeners {
-    private val listeners = arrayListOf<ChatListener>()
+    private val listeners = arrayListOf<DialogListener>()
 
 
     fun onMemberAdded(member: Member) {
         listeners.forEach {
-            it.onMemberAdded(member)
+            //it.onMemberAdded(member)
         }
     }
 
 
     fun onMemberDeleted(member: Member) {
         listeners.forEach {
-            it.onMemberDeleted(member)
+            //it.onMemberDeleted(member)
         }
     }
 
@@ -32,27 +32,27 @@ internal class DialogListeners {
 
     fun onMessageUpdated(message: Message) {
         listeners.forEach {
-            it.onMessageUpdated(message)
+            //it.onMessageUpdated(message)
         }
     }
 
 
     fun onMessageDeleted(message: Message) {
         listeners.forEach {
-            it.onMessageDeleted(message)
+            //it.onMessageDeleted(message)
         }
     }
 
 
     @Synchronized
-    fun addListener(l: ChatListener) {
+    fun addListener(l: DialogListener) {
         if (!listeners.contains(l)) {
             listeners.add(l)
         }
     }
 
 
-    fun removeListener(l: ChatListener?) {
+    fun removeListener(l: DialogListener?) {
         listeners.remove(l)
     }
 
