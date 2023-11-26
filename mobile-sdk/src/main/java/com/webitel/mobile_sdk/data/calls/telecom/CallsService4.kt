@@ -3,6 +3,7 @@ package com.webitel.mobile_sdk.data.calls.telecom
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
 import android.os.PowerManager
 import android.telecom.Call
 import android.telecom.Connection
@@ -12,7 +13,6 @@ import android.telecom.PhoneAccount
 import android.telecom.PhoneAccountHandle
 import android.telecom.TelecomManager
 import android.telecom.VideoProfile
-import android.util.Log
 import com.webitel.mobile_sdk.data.calls.CallsRepository
 import com.webitel.mobile_sdk.data.calls.common.Constants
 import com.webitel.mobile_sdk.domain.Code
@@ -55,7 +55,11 @@ class CallsService4: ConnectionService(), Constants {
             Uri.fromParts(PhoneAccount.SCHEME_SIP, call.toNumber, null)
         val connection = CallConnection(call)
         connection.setInitializing()
-        connection.connectionProperties = Call.Details.PROPERTY_SELF_MANAGED
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            connection.connectionProperties = Call.Details.PROPERTY_SELF_MANAGED
+        }
+
         connection.number = call.toNumber
         connection.displayName = call.toName
         connection.isInbound = true
@@ -77,16 +81,17 @@ class CallsService4: ConnectionService(), Constants {
         request: ConnectionRequest?
     ): Connection? {
         val extras = request!!.extras
-        Log.e("onCreateOutgoingConnection", "rrrr")
         val idParam = extras.getString(PARAM_CALL_ID) ?: return null
-        Log.e("onCreateOutgoingConnection", "idParam")
         val call = CallsRepository.getCallById(idParam)
             ?: return null
-        Log.e("onCreateOutgoingConnection", "call")
 
         val connection = CallConnection(call)
         connection.setInitializing()
-        connection.connectionProperties = Call.Details.PROPERTY_SELF_MANAGED
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            connection.connectionProperties = Call.Details.PROPERTY_SELF_MANAGED
+        }
+
         connection.number = call.toNumber
         connection.displayName = call.toName
         connection.audioModeIsVoip = true

@@ -300,8 +300,8 @@ internal class SipManager {
 
     private fun setLogConfig(epConfig: EpConfig) {
         logWriter = SipLogWriter()
-        epConfig.logConfig.level = 4
-        epConfig.logConfig.consoleLevel = 4
+        epConfig.logConfig.level = 3
+        epConfig.logConfig.consoleLevel = 3
 
         val logCfg = epConfig.logConfig
         logCfg.writer = logWriter

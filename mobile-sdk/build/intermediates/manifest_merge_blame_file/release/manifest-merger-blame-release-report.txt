@@ -6,49 +6,49 @@
 5-->/Users/yuriizhuk/Developer/android/CustomerServiceSDK/mobile-sdk/src/main/AndroidManifest.xml
 6
 7    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
-7-->/Users/yuriizhuk/Developer/android/CustomerServiceSDK/mobile-sdk/src/main/AndroidManifest.xml:6:5-76
-7-->/Users/yuriizhuk/Developer/android/CustomerServiceSDK/mobile-sdk/src/main/AndroidManifest.xml:6:22-73
+7-->/Users/yuriizhuk/Developer/android/CustomerServiceSDK/mobile-sdk/src/main/AndroidManifest.xml:4:5-76
+7-->/Users/yuriizhuk/Developer/android/CustomerServiceSDK/mobile-sdk/src/main/AndroidManifest.xml:4:22-73
 8    <uses-permission android:name="android.permission.MANAGE_OWN_CALLS" />
-8-->/Users/yuriizhuk/Developer/android/CustomerServiceSDK/mobile-sdk/src/main/AndroidManifest.xml:7:5-75
-8-->/Users/yuriizhuk/Developer/android/CustomerServiceSDK/mobile-sdk/src/main/AndroidManifest.xml:7:22-72
+8-->/Users/yuriizhuk/Developer/android/CustomerServiceSDK/mobile-sdk/src/main/AndroidManifest.xml:5:5-75
+8-->/Users/yuriizhuk/Developer/android/CustomerServiceSDK/mobile-sdk/src/main/AndroidManifest.xml:5:22-72
 9    <uses-permission android:name="android.permission.WAKE_LOCK" />
-9-->/Users/yuriizhuk/Developer/android/CustomerServiceSDK/mobile-sdk/src/main/AndroidManifest.xml:8:5-68
-9-->/Users/yuriizhuk/Developer/android/CustomerServiceSDK/mobile-sdk/src/main/AndroidManifest.xml:8:22-65
+9-->/Users/yuriizhuk/Developer/android/CustomerServiceSDK/mobile-sdk/src/main/AndroidManifest.xml:6:5-68
+9-->/Users/yuriizhuk/Developer/android/CustomerServiceSDK/mobile-sdk/src/main/AndroidManifest.xml:6:22-65
 10    <uses-permission android:name="android.permission.RECORD_AUDIO" />
-10-->/Users/yuriizhuk/Developer/android/CustomerServiceSDK/mobile-sdk/src/main/AndroidManifest.xml:9:5-70
-10-->/Users/yuriizhuk/Developer/android/CustomerServiceSDK/mobile-sdk/src/main/AndroidManifest.xml:9:22-68
+10-->/Users/yuriizhuk/Developer/android/CustomerServiceSDK/mobile-sdk/src/main/AndroidManifest.xml:7:5-70
+10-->/Users/yuriizhuk/Developer/android/CustomerServiceSDK/mobile-sdk/src/main/AndroidManifest.xml:7:22-68
 11    <uses-permission android:name="android.permission.INTERNET" />
-11-->/Users/yuriizhuk/Developer/android/CustomerServiceSDK/mobile-sdk/src/main/AndroidManifest.xml:10:5-67
-11-->/Users/yuriizhuk/Developer/android/CustomerServiceSDK/mobile-sdk/src/main/AndroidManifest.xml:10:22-64
+11-->/Users/yuriizhuk/Developer/android/CustomerServiceSDK/mobile-sdk/src/main/AndroidManifest.xml:8:5-67
+11-->/Users/yuriizhuk/Developer/android/CustomerServiceSDK/mobile-sdk/src/main/AndroidManifest.xml:8:22-64
 12    <uses-permission android:name="android.requestLegacyExternalStorage=&quot;true&quot;" />
-12-->/Users/yuriizhuk/Developer/android/CustomerServiceSDK/mobile-sdk/src/main/AndroidManifest.xml:11:5-83
-12-->/Users/yuriizhuk/Developer/android/CustomerServiceSDK/mobile-sdk/src/main/AndroidManifest.xml:11:22-80
+12-->/Users/yuriizhuk/Developer/android/CustomerServiceSDK/mobile-sdk/src/main/AndroidManifest.xml:9:5-83
+12-->/Users/yuriizhuk/Developer/android/CustomerServiceSDK/mobile-sdk/src/main/AndroidManifest.xml:9:22-80
 13
 14    <application
-14-->/Users/yuriizhuk/Developer/android/CustomerServiceSDK/mobile-sdk/src/main/AndroidManifest.xml:14:5-29:19
+14-->/Users/yuriizhuk/Developer/android/CustomerServiceSDK/mobile-sdk/src/main/AndroidManifest.xml:11:5-25:19
 15        android:allowAudioPlaybackCapture="true"
-15-->/Users/yuriizhuk/Developer/android/CustomerServiceSDK/mobile-sdk/src/main/AndroidManifest.xml:15:9-49
+15-->/Users/yuriizhuk/Developer/android/CustomerServiceSDK/mobile-sdk/src/main/AndroidManifest.xml:12:9-49
 16        android:exported="true"
-16-->/Users/yuriizhuk/Developer/android/CustomerServiceSDK/mobile-sdk/src/main/AndroidManifest.xml:16:9-32
+16-->/Users/yuriizhuk/Developer/android/CustomerServiceSDK/mobile-sdk/src/main/AndroidManifest.xml:13:9-32
 17        android:extractNativeLibs="true"
-17-->/Users/yuriizhuk/Developer/android/CustomerServiceSDK/mobile-sdk/src/main/AndroidManifest.xml:17:9-41
+17-->/Users/yuriizhuk/Developer/android/CustomerServiceSDK/mobile-sdk/src/main/AndroidManifest.xml:14:9-41
 18        android:usesCleartextTraffic="true" >
-18-->/Users/yuriizhuk/Developer/android/CustomerServiceSDK/mobile-sdk/src/main/AndroidManifest.xml:18:9-44
+18-->/Users/yuriizhuk/Developer/android/CustomerServiceSDK/mobile-sdk/src/main/AndroidManifest.xml:15:9-44
 19        <service
-19-->/Users/yuriizhuk/Developer/android/CustomerServiceSDK/mobile-sdk/src/main/AndroidManifest.xml:20:9-28:19
+19-->/Users/yuriizhuk/Developer/android/CustomerServiceSDK/mobile-sdk/src/main/AndroidManifest.xml:16:9-24:19
 20            android:name="com.webitel.mobile_sdk.data.calls.telecom.CallsService4"
-20-->/Users/yuriizhuk/Developer/android/CustomerServiceSDK/mobile-sdk/src/main/AndroidManifest.xml:21:13-83
+20-->/Users/yuriizhuk/Developer/android/CustomerServiceSDK/mobile-sdk/src/main/AndroidManifest.xml:17:13-83
 21            android:enabled="true"
-21-->/Users/yuriizhuk/Developer/android/CustomerServiceSDK/mobile-sdk/src/main/AndroidManifest.xml:22:13-35
+21-->/Users/yuriizhuk/Developer/android/CustomerServiceSDK/mobile-sdk/src/main/AndroidManifest.xml:18:13-35
 22            android:exported="true"
-22-->/Users/yuriizhuk/Developer/android/CustomerServiceSDK/mobile-sdk/src/main/AndroidManifest.xml:23:13-36
+22-->/Users/yuriizhuk/Developer/android/CustomerServiceSDK/mobile-sdk/src/main/AndroidManifest.xml:19:13-36
 23            android:permission="android.permission.BIND_TELECOM_CONNECTION_SERVICE" >
-23-->/Users/yuriizhuk/Developer/android/CustomerServiceSDK/mobile-sdk/src/main/AndroidManifest.xml:24:13-84
+23-->/Users/yuriizhuk/Developer/android/CustomerServiceSDK/mobile-sdk/src/main/AndroidManifest.xml:20:13-84
 24            <intent-filter>
-24-->/Users/yuriizhuk/Developer/android/CustomerServiceSDK/mobile-sdk/src/main/AndroidManifest.xml:25:13-27:29
+24-->/Users/yuriizhuk/Developer/android/CustomerServiceSDK/mobile-sdk/src/main/AndroidManifest.xml:21:13-23:29
 25                <action android:name="android.telecom.ConnectionService" />
-25-->/Users/yuriizhuk/Developer/android/CustomerServiceSDK/mobile-sdk/src/main/AndroidManifest.xml:26:17-76
-25-->/Users/yuriizhuk/Developer/android/CustomerServiceSDK/mobile-sdk/src/main/AndroidManifest.xml:26:25-73
+25-->/Users/yuriizhuk/Developer/android/CustomerServiceSDK/mobile-sdk/src/main/AndroidManifest.xml:22:17-76
+25-->/Users/yuriizhuk/Developer/android/CustomerServiceSDK/mobile-sdk/src/main/AndroidManifest.xml:22:25-73
 26            </intent-filter>
 27        </service>
 28    </application>

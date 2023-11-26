@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.webitel.mobile_sdk">
-
-
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
     <uses-permission android:name="android.permission.MANAGE_OWN_CALLS" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
@@ -10,13 +8,11 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name='android.requestLegacyExternalStorage="true"' />
 
-
     <application
         android:allowAudioPlaybackCapture="true"
         android:exported="true"
         android:extractNativeLibs="true"
         android:usesCleartextTraffic="true">
-
         <service
             android:name="com.webitel.mobile_sdk.data.calls.telecom.CallsService4"
             android:enabled="true"
@@ -27,5 +23,4 @@
             </intent-filter>
         </service>
     </application>
-
 </manifest>

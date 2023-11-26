@@ -52,10 +52,10 @@ internal class AuthRepository(
                 .build()
 
             authApi.login(appToken, identity, object : CallbackListener<LoginResponse> {
-                override fun onSuccess(r: LoginResponse) {
+                override fun onSuccess(t: LoginResponse) {
                     currentUser = user
-                    storage.saveAccessToken(r.token)
-                    callback.onSuccess(r.session)
+                    storage.saveAccessToken(t.token)
+                    callback.onSuccess(t.session)
                 }
 
                 override fun onError(e: Error) {
@@ -141,7 +141,7 @@ internal class AuthRepository(
 
         if (!response.err.message.isNullOrEmpty()) {
             Log.e(
-                "err.",
+                "onResponse",
                 "${response.err.message}; code - ${response.err.code}"
             )
             request.onError(

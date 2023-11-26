@@ -1,6 +1,5 @@
 package com.webitel.mobile_sdk.data.grps
 
-import android.util.Log
 import io.grpc.CallOptions
 import io.grpc.Channel
 import io.grpc.ClientCall
@@ -31,9 +30,6 @@ internal class GrpcInterceptor(
     ): ClientCall<ReqT, RespT> {
         return object : ForwardingClientCall.SimpleForwardingClientCall<ReqT, RespT>(next.newCall(method, callOptions)) {
             override fun sendMessage(message: ReqT) {
-
-                Log.e("Send grpc", message.toString())
-
                 super.sendMessage(message)
             }
 
@@ -42,7 +38,6 @@ internal class GrpcInterceptor(
 
                 super.start(object : ForwardingClientCallListener.SimpleForwardingClientCallListener<RespT>(responseListener) {
                     override fun onMessage(message: RespT) {
-                        Log.e("Receive grpc", message.toString())
                         super.onMessage(message)
                     }
                 }, headers)

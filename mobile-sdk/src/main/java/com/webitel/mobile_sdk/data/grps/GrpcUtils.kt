@@ -29,7 +29,7 @@ internal object GrpcUtils {
                 shutdownManagedChannel(it.channel)
             }
         }catch (e: Exception) {
-            Log.e("shutdownNow", e.message.toString())
+            Log.e("closeAndOpenChannel", e.message.toString())
         }
 
         return getNewChannel(config)

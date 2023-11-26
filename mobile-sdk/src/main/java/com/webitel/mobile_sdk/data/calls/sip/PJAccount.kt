@@ -1,8 +1,6 @@
 package com.webitel.mobile_sdk.data.calls.sip
 
 import android.util.Log
-import com.webitel.mobile_sdk.data.calls.sip.SipCallbacks
-import com.webitel.mobile_sdk.data.calls.sip.SipConfig
 import org.pjsip.pjsua2.Account
 import org.pjsip.pjsua2.OnIncomingCallParam
 import org.pjsip.pjsua2.OnRegStateParam
@@ -52,7 +50,6 @@ internal class PJAccount(
             val m = msg.substring(index)
             val s = m.split("\r\n").first().toString()
             wid = s.substring(s.indexOf(':')).trim(':', ' ')
-            Log.e("vid", wid)
         }
 
         callbacks.onIncomingCallPJSIP(prm.callId, wid)

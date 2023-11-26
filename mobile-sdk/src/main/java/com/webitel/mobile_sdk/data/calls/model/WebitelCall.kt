@@ -1,6 +1,7 @@
 package com.webitel.mobile_sdk.data.calls.model
 
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.telecom.CallAudioState
 import android.telecom.Connection
@@ -260,7 +261,9 @@ internal class WebitelCall(
 
     private fun setAudioRoute() {
         val route = repository.getActiveAudioRoute()
-        telecomCall?.setAudioRoute(route)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            telecomCall?.setAudioRoute(route)
+        }
         if (CallsRepository.isSpeakerOn) {
             addState(CallState.LOUDSPEAKER)
         } else {

@@ -66,29 +66,29 @@ internal class ClientGrpc(
 
                 when (state) {
                     ConnectivityState.CONNECTING -> {
-                        Log.e("state", "CONNECTING")
+                        //Log.e("state", "CONNECTING")
                     }
 
                     ConnectivityState.SHUTDOWN -> {
-                        Log.e("state", "SHUTDOWN")
+                        //Log.e("state", "SHUTDOWN")
                         return // DISCONNECTED state is final.
                     }
 
                     ConnectivityState.TRANSIENT_FAILURE -> {
-                        Log.e("state", "TRANSIENT_FAILURE")
+                        //Log.e("state", "TRANSIENT_FAILURE")
                     }
 
                     ConnectivityState.READY -> {
-                        Log.e("state", "READY")
+                        //Log.e("state", "READY")
                         chatListener?.onConnectionReady()
                     }
 
                     ConnectivityState.IDLE -> {
-                        Log.e("state", "IDLE")
+                        //Log.e("state", "IDLE")
                     }
 
                     else -> {
-                        Log.e("state", "null")
+                        //Log.e("state", "null")
                         // receive null
                     }
                 }
@@ -138,7 +138,6 @@ internal class ClientGrpc(
                 stub.token(m, object : StreamObserver<Auth.AccessToken> {
 
                     override fun onNext(value: Auth.AccessToken?) {
-                        Log.e("Login.onNext", value.toString())
                         if (value != null) {
                             setAccessToken(value.accessToken)
                             val s = buildSessionFromResponse(value)
@@ -162,7 +161,7 @@ internal class ClientGrpc(
                     }
 
                     override fun onError(t: Throwable) {
-                        Log.e("Login.onError1", t.message.toString())
+                        Log.e("Login.onError", t.message.toString())
                         callback.onError(parseError(t))
                     }
 
@@ -260,23 +259,18 @@ internal class ClientGrpc(
     override fun isStreamOpened(): Boolean {
         val s = channel.channel.getState(true)
         val x = s == ConnectivityState.READY && requestObserver != null
-        Log.e("isStreamOpened", x.toString())
         return x
     }
 
 
     override fun isStateReady(requestConnection: Boolean): Boolean {
         val s = channel.channel.getState(requestConnection)
-        Log.e("getState", s.name)
         return s == ConnectivityState.READY
     }
 
 
     private fun resetBackoff() {
         val s = channel.channel.getState(true)
-        Log.e("resetBackoff", s.name)
-        Log.e("resetTEM", channel.channel.isTerminated.toString())
-        Log.e("resetShut", channel.channel.isShutdown.toString())
         if(s ==  ConnectivityState.TRANSIENT_FAILURE) {
             channel.channel.resetConnectBackoff()
         }
@@ -317,7 +311,7 @@ internal class ClientGrpc(
                 }
 
                 override fun onError(t: Throwable) {
-                    Log.e("Logout.onError", t.message.toString())
+                    Log.e("getSip.onError", t.message.toString())
                     callback.onError(parseError(t))
                 }
 
@@ -519,7 +513,7 @@ internal class ClientGrpc(
                 }
             })
         } catch (e: Exception) {
-            Log.e("hh", e.message.toString())
+            Log.e("Exception", e.message.toString())
         }
     }
 
@@ -589,8 +583,6 @@ internal class ClientGrpc(
             .build()
 
         postData(request)
-
-        Log.e("onSend", "ping - $pingId")
     }
 
 

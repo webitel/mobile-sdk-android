@@ -1,8 +1,6 @@
 package com.webitel.mobile_sdk.data.calls.sip
 
 import android.util.Log
-import com.webitel.mobile_sdk.data.calls.sip.CallSettings
-import com.webitel.mobile_sdk.data.calls.sip.PJAccount
 import org.pjsip.pjsua2.AudDevManager
 import org.pjsip.pjsua2.AudioMedia
 import org.pjsip.pjsua2.Call
@@ -39,7 +37,6 @@ internal class PJCall: Call {
 
     override fun onCallState(prm: OnCallStateParam?) {
         super.onCallState(prm)
-        Log.e("onCallState3333333", info.state.toString())
         when(info.state) {
             pjsip_inv_state.PJSIP_INV_STATE_NULL -> {}
             pjsip_inv_state.PJSIP_INV_STATE_CALLING -> {}
@@ -181,7 +178,7 @@ internal class PJCall: Call {
 
         }catch(exc: Exception) {
             Log.e(
-                "transferTo Err",
+                "transferTo",
                 exc.stackTraceToString()
             )
         }
@@ -189,7 +186,6 @@ internal class PJCall: Call {
 
 
     fun setHold() {
-        Log.e("setHold", isActive.toString())
         if(info.state != pjsip_inv_state.PJSIP_INV_STATE_CONFIRMED) {
             return
         }
@@ -200,7 +196,6 @@ internal class PJCall: Call {
 
 
     fun setUnHold() {
-        Log.e("setHold2", isActive.toString())
         if(info.state != pjsip_inv_state.PJSIP_INV_STATE_CONFIRMED){
             return
         }
