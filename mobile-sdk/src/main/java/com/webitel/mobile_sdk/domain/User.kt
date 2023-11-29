@@ -6,11 +6,21 @@ class User private constructor(builder: Builder) {
     val iss: String
     val sub: String
     val name: String
+    val email: String
+    val emailVerified: Boolean
+    val phoneNumber: String
+    val phoneNumberVerified: Boolean
+    var locale: String
 
     init {
         iss = builder.iss
         sub = builder.sub
         name = builder.name
+        email = builder.email
+        emailVerified = builder.emailVerified
+        phoneNumber = builder.phoneNumber
+        phoneNumberVerified = builder.phoneNumberVerified
+        locale = builder.locale
     }
 
 
@@ -37,6 +47,35 @@ class User private constructor(builder: Builder) {
          * */
         val name: String
     ) {
+        var email: String = ""
+            private set
+        var emailVerified: Boolean = false
+            private set
+
+        var phoneNumber: String = ""
+            private set
+        var phoneNumberVerified: Boolean = false
+            private set
+
+        var locale: String = ""
+            private set
+
+        fun email(value: String) = apply { this.email = value }
+
+        fun emailVerified(value: Boolean) = apply { this.emailVerified = value }
+
+        fun phoneNumber(value: String) = apply { this.phoneNumber = value }
+
+        fun phoneNumberVerified(value: Boolean) = apply { this.phoneNumberVerified = value }
+
+        /**
+         *  End-User's locale, represented as a BCP47 [RFC5646] language tag.
+         *  This is typically an ISO 639-1 Alpha-2 [ISO639‑1] language code in lowercase
+         *  and an ISO 3166-1 Alpha-2 [ISO3166‑1] country code in uppercase,
+         *  separated by a dash. For example, `en-US` or `uk-UA`.
+         */
+        fun locale(value: String) = apply { this.locale = value }
+
         fun build() = User(this)
     }
 }

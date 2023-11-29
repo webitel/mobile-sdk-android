@@ -84,14 +84,6 @@ internal class WebitelVoice(
     }
 
 
-    private fun getFirstCall():Call? {
-        return CallsRepository
-            .activeCalls
-            .values
-            .firstOrNull()
-    }
-
-
     private fun hasRecordAudioPermission(context: Context): Boolean {
         val recordAudio =
             ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO)

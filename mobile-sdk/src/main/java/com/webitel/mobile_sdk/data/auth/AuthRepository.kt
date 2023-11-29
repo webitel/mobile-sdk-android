@@ -49,6 +49,11 @@ internal class AuthRepository(
                 .setIss(user.iss)
                 .setSub(user.sub)
                 .setName(user.name)
+                .setEmail(user.email)
+                .setEmailVerified(user.emailVerified)
+                .setPhoneNumber(user.phoneNumber)
+                .setPhoneNumberVerified(user.phoneNumberVerified)
+                .setLocale(user.locale)
                 .build()
 
             authApi.login(appToken, identity, object : CallbackListener<LoginResponse> {
@@ -178,7 +183,14 @@ internal class AuthRepository(
                         iss = s.user.identity.iss,
                         sub = s.user.identity.sub,
                         name = s.user.identity.name
-                    ).build()
+                    )
+                        .email(s.user.identity.email)
+                        .emailVerified(s.user.identity.emailVerified)
+                        .phoneNumber(s.user.identity.phoneNumber)
+                        .phoneNumberVerified(s.user.identity.phoneNumberVerified)
+                        .locale(s.user.identity.locale)
+                        .build()
+
                     request as CallbackListener<UserSession>
                     request.onSuccess(
                         UserSession(

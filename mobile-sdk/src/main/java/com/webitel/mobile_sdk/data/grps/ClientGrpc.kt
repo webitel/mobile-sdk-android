@@ -474,7 +474,14 @@ internal class ClientGrpc(
             iss = value.user.identity.iss,
             sub = value.user.identity.sub,
             name = value.user.identity.name
-        ).build()
+        )
+            .email(value.user.identity.email)
+            .emailVerified(value.user.identity.emailVerified)
+            .phoneNumber(value.user.identity.phoneNumber)
+            .phoneNumberVerified(value.user.identity.phoneNumberVerified)
+            .locale(value.user.identity.locale)
+            .build()
+
         return UserSession(
             user = user,
             isChatAvailable = value.scopeList.contains("chat"),

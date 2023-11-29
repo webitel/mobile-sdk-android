@@ -96,7 +96,7 @@ internal class WebitelChat(
         val m = getMessageFromOptions(reqId, message)
 
         callback.onSend(m)
-        dialog.lastMessage = m
+        //dialog.lastMessage = m
 
         val p = PeerOuterClass.Peer.newBuilder()
             .setId(dialog.id)
@@ -301,10 +301,11 @@ internal class WebitelChat(
         if (dispo == Messages.Disposition.Incoming) {
             dialog.onReceiveNewMessage(message)
         } else if (dispo == Messages.Disposition.Outgoing) {
-            val lastMessage = dialog.lastMessage
-            if (lastMessage == null || (lastMessage.id > 0L && message.id > lastMessage.id))
-                dialog.onReceiveNewMessage(message)
+//            val lastMessage = dialog.lastMessage
+//            if (lastMessage == null || (message.id > lastMessage.id))
+//                dialog.onReceiveNewMessage(message)
         }
+        setTopMessage(dialog, message)
     }
 
 
@@ -444,6 +445,7 @@ internal class WebitelChat(
                             type = "chat",
                             inbox = chat.inbox,
                             leftAt = chat.left,
+                            join = chat.join,
                             lastMessage = message
                         )
                         newListDialogs.add(nd)

@@ -15,6 +15,7 @@ internal class WebitelDialog(
     val type: String,
     var inbox: Int,
     var leftAt: Long,
+    var join: Long,
     var lastMessage: Message? = null
 ) : Dialog {
 
@@ -31,13 +32,13 @@ internal class WebitelDialog(
 
 
     override fun getUpdates(request: HistoryRequest, callback: CallbackListener<List<Message>>) {
-        val o = request.offset ?: lastMessage?.id ?: 0
-        apiDelegate.getUpdates(this, o , request.limit, callback)
+        val offset = request.offset ?: lastMessage?.id ?: join
+        apiDelegate.getUpdates(this, offset, request.limit, callback)
     }
 
 
     override fun getUpdates(callback: CallbackListener<List<Message>>) {
-        apiDelegate.getUpdates(this, lastMessage?.id ?: 0, 50, callback)
+        apiDelegate.getUpdates(this, lastMessage?.id ?: join, 50, callback)
     }
 
 

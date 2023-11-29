@@ -1,6 +1,6 @@
 package com.webitel.mobile_sdk.data.calls.sip
 
-class CallSettings {
+internal class CallSettings {
     constructor()
 
     constructor (
