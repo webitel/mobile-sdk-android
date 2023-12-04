@@ -186,18 +186,17 @@ internal class WebitelChat(
 
     override fun getUpdates(
         dialog: WebitelDialog,
-        offset: Long,
+        offsetId: Long,
         limit: Int,
+        offsetDate: Long,
         callback: CallbackListener<List<Message>>
     ) {
         val r = ChatMessagesRequest.newBuilder()
             .setChatId(dialog.id)
             .setLimit(limit)
             .setOffset(
-                ChatMessagesRequest.Offset
-                    .newBuilder()
-                    .setId(offset)
-                    .build()
+                getOffset(offsetId = offsetId,
+                    offsetDate = offsetDate)
             )
             .build()
 
@@ -257,6 +256,22 @@ internal class WebitelChat(
     override fun onConnectionReady() {
         sendNextMessageFromQueue()
         sendRequests()
+    }
+
+
+    private fun getOffset(offsetId: Long,
+                          offsetDate: Long): ChatMessagesRequest.Offset {
+        return if (offsetId > 0) {
+            ChatMessagesRequest.Offset
+                .newBuilder()
+                .setId(offsetId)
+                .build()
+        } else {
+            ChatMessagesRequest.Offset
+                .newBuilder()
+                .setDate(offsetDate)
+                .build()
+        }
     }
 
 

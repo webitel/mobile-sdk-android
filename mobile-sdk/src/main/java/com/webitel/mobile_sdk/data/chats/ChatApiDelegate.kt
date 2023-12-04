@@ -22,8 +22,9 @@ internal interface ChatApiDelegate {
 
     fun getUpdates(
         dialog: WebitelDialog,
-        offset: Long,
+        offsetId: Long,
         limit: Int,
+        offsetDate: Long,
         callback: CallbackListener<List<Message>>
     )
 }
