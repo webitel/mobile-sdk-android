@@ -410,8 +410,8 @@ internal class WebitelChat(
                     }
                 }
 
-                val m = if (request.updates) messages.firstOrNull()
-                else messages.lastOrNull()
+                val m = if (request.updates) messages.lastOrNull()
+                else messages.firstOrNull()
                 m?.let {
                     setTopMessage(request.dialog, it)
                 }
