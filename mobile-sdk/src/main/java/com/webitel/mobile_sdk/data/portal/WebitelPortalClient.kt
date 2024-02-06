@@ -142,6 +142,20 @@ internal class WebitelPortalClient(
     }
 
 
+    override fun setUserSession(auth: String, callback: CallbackListener<Session>) {
+        authRepository.setSession(auth, object : CallbackListener<UserSession> {
+            override fun onSuccess(t: UserSession) {
+                userSession = t
+                callback.onSuccess(t)
+            }
+
+            override fun onError(e: Error) {
+                callback.onError(e)
+            }
+        })
+    }
+
+
     override fun registerFCMToken(token: String, callback: CallbackListener<RegisterResult>) {
         authRepository.registerFcm(token, callback)
     }
@@ -164,12 +178,16 @@ internal class WebitelPortalClient(
         if (uri.host.isNullOrEmpty())
             throw Exception("Bad address - ${client.address}")
 
+        val deviceId = client.deviceId.ifEmpty {
+            deviceInfoRepository.getDeviceId()
+        }
+
         return ChannelConfig(
             host = uri.host ?: "",
             port = uri.port,
             agent = getUserAgent(),
             clientToken = client.token,
-            deviceId = deviceInfoRepository.getDeviceId()
+            deviceId = deviceId
         )
     }
 

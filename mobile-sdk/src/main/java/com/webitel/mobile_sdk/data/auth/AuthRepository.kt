@@ -33,7 +33,6 @@ internal class AuthRepository(
 ) : GrpcListener {
 
     private val requests: HashMap<String, CallbackListener<*>> = hashMapOf()
-    private var currentUser: User? = null
 
 
     fun getToken(): AccessToken? {
@@ -58,7 +57,6 @@ internal class AuthRepository(
 
             authApi.login(appToken, identity, object : CallbackListener<LoginResponse> {
                 override fun onSuccess(t: LoginResponse) {
-                    currentUser = user
                     storage.saveAccessToken(t.token)
                     callback.onSuccess(t.session)
                 }
@@ -114,7 +112,16 @@ internal class AuthRepository(
     }
 
 
-    fun registerFcm(token: String, callback: CallbackListener<RegisterResult>) {
+    fun setSession(
+        auth: String,
+        callback: CallbackListener<UserSession>) {
+        authApi.setSession(auth, callback)
+    }
+
+
+    fun registerFcm(
+        token: String,
+        callback: CallbackListener<RegisterResult>) {
         if (authApi.isStreamOpened()) {
             val d = DevicePush.newBuilder().setFCM(token).build()
             val reqId = UUID.randomUUID().toString()

@@ -54,7 +54,7 @@ internal class WebitelVoice(
                     listener = listener,
                     toNumber = "service",
                     toName = "service",
-                    from = t.auth ?: "",
+                    from = t.extension ?: "",
                     config = t,
                     id = UUID.randomUUID().toString()
                 )

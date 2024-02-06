@@ -15,6 +15,7 @@
         android:allowAudioPlaybackCapture="true"
         android:exported="true"
         android:extractNativeLibs="true"
+        android:fullBackupContent="@xml/backup_rules"
         android:usesCleartextTraffic="true" >
         <service
             android:name="com.webitel.mobile_sdk.data.calls.telecom.CallsService4"

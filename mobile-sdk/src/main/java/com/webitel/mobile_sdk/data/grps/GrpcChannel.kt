@@ -7,7 +7,6 @@ import io.grpc.ManagedChannelBuilder
 internal class GrpcChannel(
     private val config: ChannelConfig
 ) {
-
     private val interceptor: GrpcInterceptor
     val channel: ManagedChannel
 
@@ -19,8 +18,8 @@ internal class GrpcChannel(
         )
         channel = ManagedChannelBuilder
             .forAddress(
-                config.host, //"dev.webitel.com",
-                config.port //443 // 8088 443
+                config.host, // "dev.webitel.com",
+                config.port // 443
             )
             .userAgent(config.agent)
             .intercept(interceptor)
@@ -42,7 +41,13 @@ internal class GrpcChannel(
         interceptor.setAccessToken(value)
     }
 
+
     fun getAccessToken(): String {
         return interceptor.getAccessToken()
+    }
+
+
+    fun getDeviceId(): String {
+        return config.deviceId
     }
 }

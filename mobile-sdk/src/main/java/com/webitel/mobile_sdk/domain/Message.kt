@@ -21,16 +21,35 @@ interface Message {
         internal var text: String? = null
             private set
 
+        internal var fileName: String? = null
+            private set
+
+        internal var mimeType: String? = null
+            private set
+
         internal var stream: InputStream? = null
             private set
 
+        internal var listener: MediaUploadListener? = null
+            private set
+
+
         fun withText(text: String) = apply { this.text = text }
 
-        //fun withMedia(stream: InputStream, mimeType: String) = apply { this.stream = stream }
+        fun withMedia(stream: InputStream, fileName: String, mimeType: String) = apply {
+            this.stream = stream
+            this.mimeType = mimeType
+            this.fileName = fileName
+        }
+
+        fun uploadListener(listener: MediaUploadListener) = apply { this.listener = listener }
     }
 
-    abstract class File (val fileName: String, val type: String, val size: Long) {
-        abstract fun getContentTemporaryUrl(callback: (String) -> Void)
+    interface File {
+        val id: String
+        val fileName: String
+        val type: String
+        val size: Long
     }
 }
 

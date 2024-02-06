@@ -14,5 +14,6 @@ internal interface AuthApi: BaseApi {
     )
     fun logout(callback: CallbackListener<Unit>)
     fun inspect(callback: CallbackListener<UserSession>)
+    fun setSession(auth: String, callback: CallbackListener<UserSession>)
     fun registerFcm(token: String, callback: CallbackListener<RegisterResult>)
 }

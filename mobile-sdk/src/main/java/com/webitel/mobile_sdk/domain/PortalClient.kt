@@ -14,6 +14,7 @@ interface PortalClient {
     fun userLogout(callback: LoginListener)
 
     fun getUserSession(callback: CallbackListener<Session>)
+    fun setUserSession(auth: String, callback: CallbackListener<Session>)
 
     /**
      * For FCM, the encryption key used to encrypt push messages. Set empty if you want to unsubscribe.
@@ -37,6 +38,7 @@ interface PortalClient {
         internal var ver: String = "0.0.0"
         internal var name: String = ""
         internal var fcmToken: String = ""
+        internal var deviceId: String = ""
 
 
         /**
@@ -49,6 +51,9 @@ interface PortalClient {
          * Android Application code version ; e.g.: "1.0"
          */
         fun appVersion(version: String) = apply { this.ver = version }
+
+
+        fun deviceId(value: String) = apply { this.deviceId = value }
 
 
 //        /**

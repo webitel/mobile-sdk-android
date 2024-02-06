@@ -2,30 +2,36 @@ package com.webitel.mobile_sdk.data.chats
 
 import android.util.Log
 import com.google.protobuf.Any
+import com.google.protobuf.ByteString
 import com.webitel.mobile_sdk.data.grps.ChatApi
 import com.webitel.mobile_sdk.data.grps.GrpcChatMessageListener
 import com.webitel.mobile_sdk.data.grps.`is`
 import com.webitel.mobile_sdk.data.grps.pack
 import com.webitel.mobile_sdk.data.grps.unpack
 import com.webitel.mobile_sdk.data.portal.UserSession
-import com.webitel.mobile_sdk.domain.Member
-import com.webitel.mobile_sdk.domain.Message
 import com.webitel.mobile_sdk.domain.CallbackListener
 import com.webitel.mobile_sdk.domain.ChatClient
 import com.webitel.mobile_sdk.domain.Code
 import com.webitel.mobile_sdk.domain.Dialog
 import com.webitel.mobile_sdk.domain.Error
+import com.webitel.mobile_sdk.domain.Member
+import com.webitel.mobile_sdk.domain.Message
 import com.webitel.mobile_sdk.domain.MessageCallbackListener
+import io.grpc.StatusRuntimeException
+import io.grpc.stub.StreamObserver
 import webitel.chat.History.ChatMessages
 import webitel.chat.History.ChatMessagesRequest
 import webitel.chat.MessageOuterClass
 import webitel.chat.PeerOuterClass
 import webitel.portal.ChatMessagesGrpc
 import webitel.portal.Connect
+import webitel.portal.Media
+import webitel.portal.Media.UploadMedia
 import webitel.portal.Messages
 import webitel.portal.Messages.ChatList
 import webitel.portal.Messages.UpdateNewMessage
 import java.util.UUID
+import java.util.concurrent.CountDownLatch
 
 
 internal class WebitelChat(
@@ -73,7 +79,8 @@ internal class WebitelChat(
             createDialogRequest(object : CallbackListener<List<Dialog>> {
                 override fun onSuccess(t: List<Dialog>) {
                     val d = dialogs.firstOrNull {
-                        it.id == message.message.chat.id } ?: return
+                        it.id == message.message.chat.id
+                    } ?: return
                     sendEventToDialog(d, m, message.dispo)
                 }
 
@@ -89,34 +96,160 @@ internal class WebitelChat(
 
     override fun sendMessage(
         dialog: WebitelDialog,
-        message: Message.options,
+        options: Message.options,
         callback: MessageCallbackListener
     ) {
         val reqId = UUID.randomUUID().toString()
-        val m = getMessageFromOptions(reqId, message)
+        val message = getMessageFromOptions(reqId, options)
 
-        callback.onSend(m)
-        //dialog.lastMessage = m
+        callback.onSend(message)
 
-        val p = PeerOuterClass.Peer.newBuilder()
+        val peer = PeerOuterClass.Peer.newBuilder()
             .setId(dialog.id)
             .setType(dialog.type)
             .build()
 
-        val e = Messages.SendMessageRequest
+        if (options.stream != null) {
+            uploadFile(message, options, peer, callback)
+
+        } else {
+            if (options.text.isNullOrEmpty()) return
+
+            val messageRequest = Messages.SendMessageRequest
+                .newBuilder()
+                .setPeer(peer)
+                .setText(options.text)
+                .build()
+
+            sendMessage(message, messageRequest, callback)
+        }
+    }
+
+
+    override fun downloadFile(
+        dialog: WebitelDialog,
+        fileId: String,
+        observer: com.webitel.mobile_sdk.domain.StreamObserver
+    ) {
+        val request = Media.GetFileRequest
             .newBuilder()
-            .setPeer(p)
-            .setText(message.text)
+            .setFileId(fileId)
             .build()
 
+        val responseStreamObserver = object : StreamObserver<Media.MediaFile> {
+            override fun onNext(value: Media.MediaFile?) {
+                if (value != null) {
+                    observer.onNext(value.data.toByteArray())
+                }
+            }
+
+            override fun onError(t: Throwable) {
+                observer.onError(parseError(t))
+            }
+
+            override fun onCompleted() {
+                observer.onCompleted()
+            }
+        }
+
+        chatApi.downloadFile(request, responseStreamObserver)
+    }
+
+
+    private fun uploadFile(
+        message: WebitelMessage,
+        options: Message.options,
+        peer: PeerOuterClass.Peer,
+        callback: MessageCallbackListener
+    ) {
+        val countDownLatch = CountDownLatch(1)
+        val responseStreamObserver = object : StreamObserver<MessageOuterClass.File> {
+            override fun onNext(value: MessageOuterClass.File?) {
+                if (value != null) {
+                    message.file?.setFileId(value.id)
+
+                    val messageRequest = Messages.SendMessageRequest
+                        .newBuilder()
+                        .setPeer(peer)
+                        .setFile(value)
+
+                    if (!options.text.isNullOrEmpty())
+                        messageRequest.text = options.text
+
+                    sendMessage(message, messageRequest.build(), callback)
+                }
+            }
+
+            override fun onError(t: Throwable) {
+                val err = parseError(t)
+                message.setError(err)
+                callback.onError(err)
+                countDownLatch.countDown()
+            }
+
+            override fun onCompleted() {
+                countDownLatch.countDown()
+            }
+        }
+
+        try {
+            val st = chatApi.uploadFile(responseStreamObserver)
+            val request1 = UploadMedia
+                .newBuilder()
+                .setFile(
+                    Media.InputFile.newBuilder()
+                        .setType(message.file?.type)
+                        .setName(message.file?.fileName)
+                )
+                .build()
+
+            st.onNext(request1)
+
+            val fiveKB = ByteArray(5120)
+
+            var bytesSent: Long = 0
+            var length: Int
+
+            while (options.stream!!.read(fiveKB).also { length = it } > 0) {
+                Log.d("sending", String.format("sending %d length of data", length))
+                val request = UploadMedia
+                    .newBuilder()
+                    .setData(ByteString.copyFrom(fiveKB, 0, length))
+                    .build()
+
+                st.onNext(request)
+
+                bytesSent += length
+                options.listener?.onProgress(bytesSent)
+            }
+
+            options.listener?.onCompleted()
+
+            options.stream?.close()
+            st.onCompleted()
+            countDownLatch.await()
+
+        } catch (e: Exception) {
+            val err = parseError(e)
+            message.setError(err)
+            callback.onError(err)
+            Log.e("uploadFile", e.message.toString())
+        }
+    }
+
+
+    private fun sendMessage(
+        message: WebitelMessage,
+        messageRequest: Messages.SendMessageRequest,
+        callback: MessageCallbackListener
+    ) {
         val request = Connect.Request.newBuilder()
-            .setId(reqId)
+            .setId(message.reqId)
             .setPath(ChatMessagesGrpc.getSendMessageMethod().bareMethodName)
-            .setData(Any.newBuilder().pack(e))
+            .setData(Any.newBuilder().pack(messageRequest))
             .build()
 
-
-        val mc = CacheRequests.MessageRequestCache(callback, request, m)
+        val mc = CacheRequests.MessageRequestCache(callback, request, message)
 
         cacheRequests.newRequest(mc)
 
@@ -195,8 +328,10 @@ internal class WebitelChat(
             .setChatId(dialog.id)
             .setLimit(limit)
             .setOffset(
-                getOffset(offsetId = offsetId,
-                    offsetDate = offsetDate)
+                getOffset(
+                    offsetId = offsetId,
+                    offsetDate = offsetDate
+                )
             )
             .build()
 
@@ -259,8 +394,10 @@ internal class WebitelChat(
     }
 
 
-    private fun getOffset(offsetId: Long,
-                          offsetDate: Long): ChatMessagesRequest.Offset {
+    private fun getOffset(
+        offsetId: Long,
+        offsetDate: Long
+    ): ChatMessagesRequest.Offset {
         return if (offsetId > 0) {
             ChatMessagesRequest.Offset
                 .newBuilder()
@@ -399,7 +536,7 @@ internal class WebitelChat(
                             WebitelMessage(
                                 reqId = null,
                                 text = it.text,
-                                file = null,
+                                file = toFile(it.file),
                                 from = m,
                                 isIncoming = session.invoke()?.chatAccount?.id != m.id,
                                 _id = it.id,
@@ -412,6 +549,7 @@ internal class WebitelChat(
 
                 val m = if (request.updates) messages.lastOrNull()
                 else messages.firstOrNull()
+
                 m?.let {
                     setTopMessage(request.dialog, it)
                 }
@@ -422,6 +560,16 @@ internal class WebitelChat(
                 }
             }
         }
+    }
+
+
+    private fun toFile(value: MessageOuterClass.File?): WebitelFile? {
+        return if (value == null || value.name.isNullOrEmpty()) null else WebitelFile(
+            value.name,
+            value.type,
+            value.size,
+            value.id
+        )
     }
 
 
@@ -492,7 +640,7 @@ internal class WebitelChat(
         return WebitelMessage(
             reqId = null,
             text = message.text,
-            file = null,
+            file = toFile(message.file),
             from = Member(
                 id = message.from.id,
                 name = message.from.name,
@@ -533,10 +681,30 @@ internal class WebitelChat(
         return WebitelMessage(
             reqId = reqId,
             text = o.text,
-            file = null,
+            file = if (o.stream == null) null else WebitelFile(
+                o.fileName ?: UUID.randomUUID().toString(),
+                o.mimeType ?: "application/octet-stream",
+                o.stream?.available()?.toLong() ?: 0L,
+                ""
+            ),
             from = getCurrentUser(),
             isIncoming = false
         )
+    }
+
+
+    private fun parseError(t: Throwable): Error {
+        return if (t is StatusRuntimeException) {
+            Error(
+                message = t.status.description ?: t.message.toString(),
+                code = Code.forNumber(t.status.code.value())
+            )
+        } else {
+            Error(
+                message = t.message.toString(),
+                code = Code.UNKNOWN
+            )
+        }
     }
 
 

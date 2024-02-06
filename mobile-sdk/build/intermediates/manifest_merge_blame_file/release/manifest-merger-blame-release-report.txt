@@ -25,32 +25,34 @@
 12-->/Users/yuriizhuk/Developer/android/CustomerServiceSDK/mobile-sdk/src/main/AndroidManifest.xml:9:22-80
 13
 14    <application
-14-->/Users/yuriizhuk/Developer/android/CustomerServiceSDK/mobile-sdk/src/main/AndroidManifest.xml:11:5-25:19
+14-->/Users/yuriizhuk/Developer/android/CustomerServiceSDK/mobile-sdk/src/main/AndroidManifest.xml:11:5-26:19
 15        android:allowAudioPlaybackCapture="true"
 15-->/Users/yuriizhuk/Developer/android/CustomerServiceSDK/mobile-sdk/src/main/AndroidManifest.xml:12:9-49
 16        android:exported="true"
-16-->/Users/yuriizhuk/Developer/android/CustomerServiceSDK/mobile-sdk/src/main/AndroidManifest.xml:13:9-32
+16-->/Users/yuriizhuk/Developer/android/CustomerServiceSDK/mobile-sdk/src/main/AndroidManifest.xml:14:9-32
 17        android:extractNativeLibs="true"
-17-->/Users/yuriizhuk/Developer/android/CustomerServiceSDK/mobile-sdk/src/main/AndroidManifest.xml:14:9-41
-18        android:usesCleartextTraffic="true" >
-18-->/Users/yuriizhuk/Developer/android/CustomerServiceSDK/mobile-sdk/src/main/AndroidManifest.xml:15:9-44
-19        <service
-19-->/Users/yuriizhuk/Developer/android/CustomerServiceSDK/mobile-sdk/src/main/AndroidManifest.xml:16:9-24:19
-20            android:name="com.webitel.mobile_sdk.data.calls.telecom.CallsService4"
-20-->/Users/yuriizhuk/Developer/android/CustomerServiceSDK/mobile-sdk/src/main/AndroidManifest.xml:17:13-83
-21            android:enabled="true"
-21-->/Users/yuriizhuk/Developer/android/CustomerServiceSDK/mobile-sdk/src/main/AndroidManifest.xml:18:13-35
-22            android:exported="true"
-22-->/Users/yuriizhuk/Developer/android/CustomerServiceSDK/mobile-sdk/src/main/AndroidManifest.xml:19:13-36
-23            android:permission="android.permission.BIND_TELECOM_CONNECTION_SERVICE" >
-23-->/Users/yuriizhuk/Developer/android/CustomerServiceSDK/mobile-sdk/src/main/AndroidManifest.xml:20:13-84
-24            <intent-filter>
-24-->/Users/yuriizhuk/Developer/android/CustomerServiceSDK/mobile-sdk/src/main/AndroidManifest.xml:21:13-23:29
-25                <action android:name="android.telecom.ConnectionService" />
-25-->/Users/yuriizhuk/Developer/android/CustomerServiceSDK/mobile-sdk/src/main/AndroidManifest.xml:22:17-76
-25-->/Users/yuriizhuk/Developer/android/CustomerServiceSDK/mobile-sdk/src/main/AndroidManifest.xml:22:25-73
-26            </intent-filter>
-27        </service>
-28    </application>
-29
-30</manifest>
+17-->/Users/yuriizhuk/Developer/android/CustomerServiceSDK/mobile-sdk/src/main/AndroidManifest.xml:15:9-41
+18        android:fullBackupContent="@xml/backup_rules"
+18-->/Users/yuriizhuk/Developer/android/CustomerServiceSDK/mobile-sdk/src/main/AndroidManifest.xml:13:9-54
+19        android:usesCleartextTraffic="true" >
+19-->/Users/yuriizhuk/Developer/android/CustomerServiceSDK/mobile-sdk/src/main/AndroidManifest.xml:16:9-44
+20        <service
+20-->/Users/yuriizhuk/Developer/android/CustomerServiceSDK/mobile-sdk/src/main/AndroidManifest.xml:17:9-25:19
+21            android:name="com.webitel.mobile_sdk.data.calls.telecom.CallsService4"
+21-->/Users/yuriizhuk/Developer/android/CustomerServiceSDK/mobile-sdk/src/main/AndroidManifest.xml:18:13-83
+22            android:enabled="true"
+22-->/Users/yuriizhuk/Developer/android/CustomerServiceSDK/mobile-sdk/src/main/AndroidManifest.xml:19:13-35
+23            android:exported="true"
+23-->/Users/yuriizhuk/Developer/android/CustomerServiceSDK/mobile-sdk/src/main/AndroidManifest.xml:20:13-36
+24            android:permission="android.permission.BIND_TELECOM_CONNECTION_SERVICE" >
+24-->/Users/yuriizhuk/Developer/android/CustomerServiceSDK/mobile-sdk/src/main/AndroidManifest.xml:21:13-84
+25            <intent-filter>
+25-->/Users/yuriizhuk/Developer/android/CustomerServiceSDK/mobile-sdk/src/main/AndroidManifest.xml:22:13-24:29
+26                <action android:name="android.telecom.ConnectionService" />
+26-->/Users/yuriizhuk/Developer/android/CustomerServiceSDK/mobile-sdk/src/main/AndroidManifest.xml:23:17-76
+26-->/Users/yuriizhuk/Developer/android/CustomerServiceSDK/mobile-sdk/src/main/AndroidManifest.xml:23:25-73
+27            </intent-filter>
+28        </service>
+29    </application>
+30
+31</manifest>

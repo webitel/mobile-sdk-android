@@ -8,7 +8,7 @@ import com.webitel.mobile_sdk.domain.Error
 internal class WebitelMessage(
     val reqId: String?,
     override val text: String?,
-    override val file: Message.File?,
+    override val file: WebitelFile?,
     override val from: Member,
     override val isIncoming: Boolean,
     private var _id: Long = 0,

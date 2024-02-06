@@ -1555,17 +1555,27 @@ java.lang.String defaultValue);
 
     /**
      * <pre>
-     * Unique media file identifier.
+     * File location
      * </pre>
      *
-     * <code>int64 id = 1;</code>
+     * <code>string id = 1;</code>
      * @return The id.
      */
-    long getId();
+    java.lang.String getId();
+    /**
+     * <pre>
+     * File location
+     * </pre>
+     *
+     * <code>string id = 1;</code>
+     * @return The bytes for id.
+     */
+    com.google.protobuf.ByteString
+        getIdBytes();
 
     /**
      * <pre>
-     * Size of the media file. Bytes
+     * Size in bytes
      * </pre>
      *
      * <code>int64 size = 3;</code>
@@ -1575,7 +1585,7 @@ java.lang.String defaultValue);
 
     /**
      * <pre>
-     * MIME-Type of the media content.
+     * MIME media type
      * </pre>
      *
      * <code>string type = 4;</code>
@@ -1584,7 +1594,7 @@ java.lang.String defaultValue);
     java.lang.String getType();
     /**
      * <pre>
-     * MIME-Type of the media content.
+     * MIME media type
      * </pre>
      *
      * <code>string type = 4;</code>
@@ -1595,7 +1605,7 @@ java.lang.String defaultValue);
 
     /**
      * <pre>
-     * Filename.
+     * Filename
      * </pre>
      *
      * <code>string name = 5;</code>
@@ -1604,7 +1614,7 @@ java.lang.String defaultValue);
     java.lang.String getName();
     /**
      * <pre>
-     * Filename.
+     * Filename
      * </pre>
      *
      * <code>string name = 5;</code>
@@ -1626,52 +1636,82 @@ java.lang.String defaultValue);
       // @@protoc_insertion_point(message_implements:webitel.chat.File)
       FileOrBuilder {
     private File() {
+      id_ = "";
       type_ = "";
       name_ = "";
     }
     public static final int ID_FIELD_NUMBER = 1;
-    private long id_;
+    private java.lang.String id_;
     /**
      * <pre>
-     * Unique media file identifier.
+     * File location
      * </pre>
      *
-     * <code>int64 id = 1;</code>
+     * <code>string id = 1;</code>
      * @return The id.
      */
     @java.lang.Override
-    public long getId() {
+    public java.lang.String getId() {
       return id_;
     }
     /**
      * <pre>
-     * Unique media file identifier.
+     * File location
      * </pre>
      *
-     * <code>int64 id = 1;</code>
+     * <code>string id = 1;</code>
+     * @return The bytes for id.
+     */
+    @java.lang.Override
+    public com.google.protobuf.ByteString
+        getIdBytes() {
+      return com.google.protobuf.ByteString.copyFromUtf8(id_);
+    }
+    /**
+     * <pre>
+     * File location
+     * </pre>
+     *
+     * <code>string id = 1;</code>
      * @param value The id to set.
      */
-    private void setId(long value) {
-      
+    private void setId(
+        java.lang.String value) {
+      java.lang.Class<?> valueClass = value.getClass();
+  
       id_ = value;
     }
     /**
      * <pre>
-     * Unique media file identifier.
+     * File location
      * </pre>
      *
-     * <code>int64 id = 1;</code>
+     * <code>string id = 1;</code>
      */
     private void clearId() {
       
-      id_ = 0L;
+      id_ = getDefaultInstance().getId();
+    }
+    /**
+     * <pre>
+     * File location
+     * </pre>
+     *
+     * <code>string id = 1;</code>
+     * @param value The bytes for id to set.
+     */
+    private void setIdBytes(
+        com.google.protobuf.ByteString value) {
+      checkByteStringIsUtf8(value);
+      id_ = value.toStringUtf8();
+      
     }
 
     public static final int SIZE_FIELD_NUMBER = 3;
     private long size_;
     /**
      * <pre>
-     * Size of the media file. Bytes
+     * Size in bytes
      * </pre>
      *
      * <code>int64 size = 3;</code>
@@ -1683,7 +1723,7 @@ java.lang.String defaultValue);
     }
     /**
      * <pre>
-     * Size of the media file. Bytes
+     * Size in bytes
      * </pre>
      *
      * <code>int64 size = 3;</code>
@@ -1695,7 +1735,7 @@ java.lang.String defaultValue);
     }
     /**
      * <pre>
-     * Size of the media file. Bytes
+     * Size in bytes
      * </pre>
      *
      * <code>int64 size = 3;</code>
@@ -1709,7 +1749,7 @@ java.lang.String defaultValue);
     private java.lang.String type_;
     /**
      * <pre>
-     * MIME-Type of the media content.
+     * MIME media type
      * </pre>
      *
      * <code>string type = 4;</code>
@@ -1721,7 +1761,7 @@ java.lang.String defaultValue);
     }
     /**
      * <pre>
-     * MIME-Type of the media content.
+     * MIME media type
      * </pre>
      *
      * <code>string type = 4;</code>
@@ -1734,7 +1774,7 @@ java.lang.String defaultValue);
     }
     /**
      * <pre>
-     * MIME-Type of the media content.
+     * MIME media type
      * </pre>
      *
      * <code>string type = 4;</code>
@@ -1748,7 +1788,7 @@ java.lang.String defaultValue);
     }
     /**
      * <pre>
-     * MIME-Type of the media content.
+     * MIME media type
      * </pre>
      *
      * <code>string type = 4;</code>
@@ -1759,7 +1799,7 @@ java.lang.String defaultValue);
     }
     /**
      * <pre>
-     * MIME-Type of the media content.
+     * MIME media type
      * </pre>
      *
      * <code>string type = 4;</code>
@@ -1776,7 +1816,7 @@ java.lang.String defaultValue);
     private java.lang.String name_;
     /**
      * <pre>
-     * Filename.
+     * Filename
      * </pre>
      *
      * <code>string name = 5;</code>
@@ -1788,7 +1828,7 @@ java.lang.String defaultValue);
     }
     /**
      * <pre>
-     * Filename.
+     * Filename
      * </pre>
      *
      * <code>string name = 5;</code>
@@ -1801,7 +1841,7 @@ java.lang.String defaultValue);
     }
     /**
      * <pre>
-     * Filename.
+     * Filename
      * </pre>
      *
      * <code>string name = 5;</code>
@@ -1815,7 +1855,7 @@ java.lang.String defaultValue);
     }
     /**
      * <pre>
-     * Filename.
+     * Filename
      * </pre>
      *
      * <code>string name = 5;</code>
@@ -1826,7 +1866,7 @@ java.lang.String defaultValue);
     }
     /**
      * <pre>
-     * Filename.
+     * Filename
      * </pre>
      *
      * <code>string name = 5;</code>
@@ -1940,36 +1980,50 @@ java.lang.String defaultValue);
 
       /**
        * <pre>
-       * Unique media file identifier.
+       * File location
        * </pre>
        *
-       * <code>int64 id = 1;</code>
+       * <code>string id = 1;</code>
        * @return The id.
        */
       @java.lang.Override
-      public long getId() {
+      public java.lang.String getId() {
         return instance.getId();
       }
       /**
        * <pre>
-       * Unique media file identifier.
+       * File location
        * </pre>
        *
-       * <code>int64 id = 1;</code>
+       * <code>string id = 1;</code>
+       * @return The bytes for id.
+       */
+      @java.lang.Override
+      public com.google.protobuf.ByteString
+          getIdBytes() {
+        return instance.getIdBytes();
+      }
+      /**
+       * <pre>
+       * File location
+       * </pre>
+       *
+       * <code>string id = 1;</code>
        * @param value The id to set.
        * @return This builder for chaining.
        */
-      public Builder setId(long value) {
+      public Builder setId(
+          java.lang.String value) {
         copyOnWrite();
         instance.setId(value);
         return this;
       }
       /**
        * <pre>
-       * Unique media file identifier.
+       * File location
        * </pre>
        *
-       * <code>int64 id = 1;</code>
+       * <code>string id = 1;</code>
        * @return This builder for chaining.
        */
       public Builder clearId() {
@@ -1977,10 +2031,25 @@ java.lang.String defaultValue);
         instance.clearId();
         return this;
       }
+      /**
+       * <pre>
+       * File location
+       * </pre>
+       *
+       * <code>string id = 1;</code>
+       * @param value The bytes for id to set.
+       * @return This builder for chaining.
+       */
+      public Builder setIdBytes(
+          com.google.protobuf.ByteString value) {
+        copyOnWrite();
+        instance.setIdBytes(value);
+        return this;
+      }
 
       /**
        * <pre>
-       * Size of the media file. Bytes
+       * Size in bytes
        * </pre>
        *
        * <code>int64 size = 3;</code>
@@ -1992,7 +2061,7 @@ java.lang.String defaultValue);
       }
       /**
        * <pre>
-       * Size of the media file. Bytes
+       * Size in bytes
        * </pre>
        *
        * <code>int64 size = 3;</code>
@@ -2006,7 +2075,7 @@ java.lang.String defaultValue);
       }
       /**
        * <pre>
-       * Size of the media file. Bytes
+       * Size in bytes
        * </pre>
        *
        * <code>int64 size = 3;</code>
@@ -2020,7 +2089,7 @@ java.lang.String defaultValue);
 
       /**
        * <pre>
-       * MIME-Type of the media content.
+       * MIME media type
        * </pre>
        *
        * <code>string type = 4;</code>
@@ -2032,7 +2101,7 @@ java.lang.String defaultValue);
       }
       /**
        * <pre>
-       * MIME-Type of the media content.
+       * MIME media type
        * </pre>
        *
        * <code>string type = 4;</code>
@@ -2045,7 +2114,7 @@ java.lang.String defaultValue);
       }
       /**
        * <pre>
-       * MIME-Type of the media content.
+       * MIME media type
        * </pre>
        *
        * <code>string type = 4;</code>
@@ -2060,7 +2129,7 @@ java.lang.String defaultValue);
       }
       /**
        * <pre>
-       * MIME-Type of the media content.
+       * MIME media type
        * </pre>
        *
        * <code>string type = 4;</code>
@@ -2073,7 +2142,7 @@ java.lang.String defaultValue);
       }
       /**
        * <pre>
-       * MIME-Type of the media content.
+       * MIME media type
        * </pre>
        *
        * <code>string type = 4;</code>
@@ -2089,7 +2158,7 @@ java.lang.String defaultValue);
 
       /**
        * <pre>
-       * Filename.
+       * Filename
        * </pre>
        *
        * <code>string name = 5;</code>
@@ -2101,7 +2170,7 @@ java.lang.String defaultValue);
       }
       /**
        * <pre>
-       * Filename.
+       * Filename
        * </pre>
        *
        * <code>string name = 5;</code>
@@ -2114,7 +2183,7 @@ java.lang.String defaultValue);
       }
       /**
        * <pre>
-       * Filename.
+       * Filename
        * </pre>
        *
        * <code>string name = 5;</code>
@@ -2129,7 +2198,7 @@ java.lang.String defaultValue);
       }
       /**
        * <pre>
-       * Filename.
+       * Filename
        * </pre>
        *
        * <code>string name = 5;</code>
@@ -2142,7 +2211,7 @@ java.lang.String defaultValue);
       }
       /**
        * <pre>
-       * Filename.
+       * Filename
        * </pre>
        *
        * <code>string name = 5;</code>
@@ -2178,7 +2247,7 @@ java.lang.String defaultValue);
               "name_",
             };
             java.lang.String info =
-                "\u0000\u0004\u0000\u0000\u0001\u0005\u0004\u0000\u0000\u0000\u0001\u0002\u0003\u0002" +
+                "\u0000\u0004\u0000\u0000\u0001\u0005\u0004\u0000\u0000\u0000\u0001\u0208\u0003\u0002" +
                 "\u0004\u0208\u0005\u0208";
             return newMessageInfo(DEFAULT_INSTANCE, info, objects);
         }

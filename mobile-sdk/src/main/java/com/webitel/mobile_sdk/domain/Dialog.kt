@@ -13,6 +13,8 @@ interface Dialog {
 
     fun sendMessage(message: Message.options, callback: MessageCallbackListener)
 
+    fun downloadFile(fileId: String, observer: StreamObserver)
+
     fun addListener(listener: DialogListener)
     fun removeListener(listener: DialogListener)
     fun removeAllListeners()

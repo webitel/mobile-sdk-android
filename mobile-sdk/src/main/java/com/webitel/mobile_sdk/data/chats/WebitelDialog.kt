@@ -6,6 +6,7 @@ import com.webitel.mobile_sdk.domain.CallbackListener
 import com.webitel.mobile_sdk.domain.Dialog
 import com.webitel.mobile_sdk.domain.HistoryRequest
 import com.webitel.mobile_sdk.domain.MessageCallbackListener
+import com.webitel.mobile_sdk.domain.StreamObserver
 
 
 internal class WebitelDialog(
@@ -44,6 +45,10 @@ internal class WebitelDialog(
 
     override fun sendMessage(message: Message.options, callback: MessageCallbackListener) {
         apiDelegate.sendMessage(this, message, callback)
+    }
+
+    override fun downloadFile(fileId: String, observer: StreamObserver) {
+        apiDelegate.downloadFile(this, fileId, observer)
     }
 
 

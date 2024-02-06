@@ -20,6 +20,7 @@ import com.webitel.mobile_sdk.domain.RegisterResult
 import io.grpc.ConnectivityState
 import io.grpc.StatusRuntimeException
 import io.grpc.stub.StreamObserver
+import webitel.chat.MessageOuterClass
 import webitel.portal.Account.Identity
 import webitel.portal.Auth
 import webitel.portal.Auth.TokenRequest
@@ -31,6 +32,8 @@ import webitel.portal.Connect.Update
 import webitel.portal.CustomerGrpc
 import webitel.portal.CustomerOuterClass
 import webitel.portal.CustomerOuterClass.RegisterDeviceResponse
+import webitel.portal.Media
+import webitel.portal.MediaStorageGrpc
 import webitel.portal.Messages
 import webitel.portal.Push
 import java.util.Timer
@@ -108,6 +111,14 @@ internal class ClientGrpc(
             inspectUnaryRequest(callback)
         }
     }
+
+
+    override fun setSession(auth: String, callback: CallbackListener<UserSession>) {
+        make {
+            setSessionUnaryRequest(auth, callback)
+        }
+    }
+
 
     override fun registerFcm(token: String, callback: CallbackListener<RegisterResult>) {
         make {
@@ -292,7 +303,7 @@ internal class ClientGrpc(
                     if (sip != null) {
 
                         val s = SipConfig(
-                            auth = sip.userId,
+                            auth = channel.getDeviceId(),
                             domain = sip.realm,
                             extension = sip.userId,
                             password = channel.getAccessToken(),
@@ -321,6 +332,23 @@ internal class ClientGrpc(
         } catch (e: Exception) {
             callback.onError(parseError(e))
         }
+    }
+
+
+    override fun uploadFile(
+        streamObserver: StreamObserver<MessageOuterClass.File>
+    ): StreamObserver<Media.UploadMedia> {
+        val stub = MediaStorageGrpc.newStub(channel.channel)
+        return stub.uploadFile(streamObserver)
+    }
+
+
+    override fun downloadFile(
+        request: Media.GetFileRequest,
+        streamObserver: StreamObserver<Media.MediaFile>
+    ){
+        val stub = MediaStorageGrpc.newStub(channel.channel)
+        stub.getFile(request, streamObserver)
     }
 
 
@@ -418,13 +446,57 @@ internal class ClientGrpc(
     }
 
 
+    private fun setSessionUnaryRequest(
+        auth: String,
+        callback: CallbackListener<UserSession>) {
+        try {
+            resetBackoff()
+            setAccessToken(auth)
+            val stub = CustomerGrpc.newStub(channel.channel)
+            val m = CustomerOuterClass.InspectRequest
+                .newBuilder()
+                .build()
+
+            stub.inspect(m, object : StreamObserver<Auth.AccessToken> {
+                override fun onNext(value: Auth.AccessToken?) {
+                    if (value != null) {
+                        setAccessToken(value.accessToken)
+                        val s = buildSessionFromResponse(value)
+                        callback.onSuccess(s)
+                    } else {
+                        callback.onError(
+                            Error(
+                                "Auth.AccessToken not found",
+                                code = Code.DATA_LOSS
+                            )
+                        )
+                    }
+                }
+
+                override fun onError(t: Throwable) {
+                    callback.onError(parseError(t))
+                }
+
+                override fun onCompleted() {}
+            })
+
+        } catch (e: Exception) {
+            callback.onError(
+                Error(
+                    e.message.toString(),
+                    code = Code.UNKNOWN
+                )
+            )
+        }
+    }
+
+
     private fun inspectUnaryRequest(callback: CallbackListener<UserSession>) {
         try {
             resetBackoff()
             val stub = CustomerGrpc.newStub(channel.channel)
             val m = CustomerOuterClass.InspectRequest
                 .newBuilder()
-
                 .build()
 
             stub.inspect(m, object : StreamObserver<Auth.AccessToken> {

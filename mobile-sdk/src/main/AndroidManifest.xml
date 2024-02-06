@@ -10,6 +10,7 @@
 
     <application
         android:allowAudioPlaybackCapture="true"
+        android:fullBackupContent="@xml/backup_rules"
         android:exported="true"
         android:extractNativeLibs="true"
         android:usesCleartextTraffic="true">
