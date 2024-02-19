@@ -58,7 +58,6 @@ android {
 
 dependencies {
     implementation 'androidx.core:core-ktx:1.8.0'
-    implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'com.google.code.gson:gson:2.10.1'
     implementation 'com.squareup.okhttp3:okhttp:4.2.1'
 
@@ -67,8 +66,6 @@ dependencies {
     implementation 'io.grpc:grpc-protobuf-lite:1.47.0'
     implementation 'io.grpc:grpc-stub:1.47.0'
     implementation 'org.apache.tomcat:annotations-api:6.0.53'
-
-    compileOnly 'com.google.api.grpc:proto-google-common-protos:2.0.1'
 
     implementation "androidx.security:security-crypto:1.1.0-alpha06"
 
@@ -125,7 +122,7 @@ afterEvaluate {
 
             groupId = "com.webitel"
             artifactId = "mobile-sdk"
-            version = "0.4.6"
+            version = "0.4.8"
         }
     }
 }
