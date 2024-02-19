@@ -68,6 +68,8 @@ dependencies {
     implementation 'io.grpc:grpc-stub:1.47.0'
     implementation 'org.apache.tomcat:annotations-api:6.0.53'
 
+    compileOnly 'com.google.api.grpc:proto-google-common-protos:2.0.1'
+
     implementation "androidx.security:security-crypto:1.1.0-alpha06"
 
     testImplementation "org.robolectric:robolectric:4.9.2"
@@ -123,7 +125,7 @@ afterEvaluate {
 
             groupId = "com.webitel"
             artifactId = "mobile-sdk"
-            version = "0.4.1"
+            version = "0.4.6"
         }
     }
 }
