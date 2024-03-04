@@ -14,7 +14,8 @@ interface PortalClient {
     fun userLogout(callback: LoginListener)
 
     fun getUserSession(callback: CallbackListener<Session>)
-    fun setUserSession(auth: String, callback: CallbackListener<Session>)
+
+    fun setAccessToken(token: String, callback: CallbackListener<Session>)
 
     /**
      * For FCM, the encryption key used to encrypt push messages. Set empty if you want to unsubscribe.

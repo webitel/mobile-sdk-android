@@ -142,8 +142,8 @@ internal class WebitelPortalClient(
     }
 
 
-    override fun setUserSession(auth: String, callback: CallbackListener<Session>) {
-        authRepository.setSession(auth, object : CallbackListener<UserSession> {
+    override fun setAccessToken(token: String, callback: CallbackListener<Session>) {
+        authRepository.setAccessToken(token, object : CallbackListener<UserSession> {
             override fun onSuccess(t: UserSession) {
                 userSession = t
                 callback.onSuccess(t)

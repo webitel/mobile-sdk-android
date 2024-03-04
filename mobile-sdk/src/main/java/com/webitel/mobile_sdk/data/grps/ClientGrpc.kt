@@ -199,7 +199,6 @@ internal class ClientGrpc(
 
                 stub.logout(m, object : StreamObserver<Connect.UpdateSignedOut> {
                     override fun onNext(value: Connect.UpdateSignedOut?) {
-                        channel.setAccessToken("")
                         callback.onSuccess(Unit)
                     }
 
@@ -460,7 +459,6 @@ internal class ClientGrpc(
             stub.inspect(m, object : StreamObserver<Auth.AccessToken> {
                 override fun onNext(value: Auth.AccessToken?) {
                     if (value != null) {
-                        setAccessToken(value.accessToken)
                         val s = buildSessionFromResponse(value)
                         callback.onSuccess(s)
                     } else {

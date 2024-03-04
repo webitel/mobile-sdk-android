@@ -9,7 +9,6 @@ import io.grpc.ForwardingClientCallListener
 import io.grpc.Metadata
 import io.grpc.Metadata.ASCII_STRING_MARSHALLER
 import io.grpc.MethodDescriptor
-import webitel.portal.CustomerGrpc
 
 
 internal class GrpcInterceptor(
@@ -60,19 +59,10 @@ internal class GrpcInterceptor(
         if(deviceId.isNotEmpty()) headers?.put(DEVICE_ID_KEY, deviceId)
         else headers?.removeAll(DEVICE_ID_KEY)
 
-        if(bareMethodName == CustomerGrpc.getTokenMethod().bareMethodName) {
-            headers?.put(CLIENT_TOKEN_KEY, clientToken)
-            headers?.removeAll(ACCEESS_TOKEN_KEY)
+        if(clientToken.isNotEmpty()) headers?.put(CLIENT_TOKEN_KEY, clientToken)
+        else headers?.removeAll(CLIENT_TOKEN_KEY)
 
-        } else {
-            if(accessToken.isNotEmpty()) {
-                headers?.put(ACCEESS_TOKEN_KEY, accessToken)
-                headers?.removeAll(CLIENT_TOKEN_KEY)
-
-            } else {
-                headers?.put(CLIENT_TOKEN_KEY, clientToken)
-                headers?.removeAll(ACCEESS_TOKEN_KEY)
-            }
-        }
+        if(accessToken.isNotEmpty()) headers?.put(ACCEESS_TOKEN_KEY, accessToken)
+        else headers?.removeAll(ACCEESS_TOKEN_KEY)
     }
 }

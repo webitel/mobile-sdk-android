@@ -112,10 +112,10 @@ internal class AuthRepository(
     }
 
 
-    fun setSession(
-        auth: String,
+    fun setAccessToken(
+        token: String,
         callback: CallbackListener<UserSession>) {
-        authApi.setSession(auth, callback)
+        authApi.setSession(token, callback)
     }
 
 
