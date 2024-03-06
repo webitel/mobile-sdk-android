@@ -301,11 +301,15 @@ internal class ClientGrpc(
                     val sip = value?.call
                     if (sip != null) {
 
+                        val password = if (sip.secret.isNullOrEmpty())
+                            channel.getAccessToken()
+                        else sip.secret
+
                         val s = SipConfig(
                             auth = channel.getDeviceId(),
                             domain = sip.realm,
                             extension = sip.userId,
-                            password = channel.getAccessToken(),
+                            password = password,
                             proxy = sip.proxy
                         )
 
