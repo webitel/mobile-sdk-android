@@ -18,9 +18,9 @@ interface PortalClient {
     fun setAccessToken(token: String, callback: CallbackListener<Session>)
 
     /**
-     * For FCM, the encryption key used to encrypt push messages. Set empty if you want to unsubscribe.
+     * Register device PUSH subscription
      * */
-    fun registerFCMToken(token: String, callback: CallbackListener<RegisterResult>)
+    fun registerDevice(pushToken: String, callback: CallbackListener<RegisterResult>)
 
     fun handleFCMNotification(data: Map<String, String>)
 

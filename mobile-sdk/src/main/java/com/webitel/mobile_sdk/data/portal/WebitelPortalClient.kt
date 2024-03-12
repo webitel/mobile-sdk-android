@@ -156,8 +156,8 @@ internal class WebitelPortalClient(
     }
 
 
-    override fun registerFCMToken(token: String, callback: CallbackListener<RegisterResult>) {
-        authRepository.registerFcm(token, callback)
+    override fun registerDevice(pushToken: String, callback: CallbackListener<RegisterResult>) {
+        authRepository.registerFcm(pushToken, callback)
     }
 
 
