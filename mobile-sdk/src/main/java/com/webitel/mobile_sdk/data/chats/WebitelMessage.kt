@@ -6,7 +6,7 @@ import com.webitel.mobile_sdk.domain.Error
 
 
 internal class WebitelMessage(
-    val reqId: String?,
+    override val sendId: String,
     override val text: String?,
     override val file: WebitelFile?,
     override val from: Member,

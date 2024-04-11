@@ -13,6 +13,8 @@ import com.webitel.mobile_sdk.domain.ChatClient
 import com.webitel.mobile_sdk.domain.User
 import com.webitel.mobile_sdk.domain.CallbackListener
 import com.webitel.mobile_sdk.domain.Code
+import com.webitel.mobile_sdk.domain.ConnectListener
+import com.webitel.mobile_sdk.domain.ConnectState
 import com.webitel.mobile_sdk.domain.Error
 import com.webitel.mobile_sdk.domain.LoginListener
 import com.webitel.mobile_sdk.domain.VoiceClient
@@ -162,6 +164,26 @@ internal class WebitelPortalClient(
 
 
     override fun handleFCMNotification(data: Map<String, String>) {}
+
+
+    override fun getConnectState(): ConnectState {
+        return grpc.getConnectState()
+    }
+
+
+    override fun addConnectListener(listener: ConnectListener) {
+        grpc.addConnectListener(listener)
+    }
+
+
+    override fun removeConnectListener(listener: ConnectListener) {
+        grpc.removeConnectListener(listener)
+    }
+
+
+    override fun openConnect() {
+        grpc.openConnection()
+    }
 
 
     private fun setupUser() {

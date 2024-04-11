@@ -5,9 +5,9 @@ option go_package = "webitel.go/api/portal;portal";
 import "google/rpc/status.proto";
 import "google/protobuf/any.proto";
 
-// Update notification
+// Update notification message.
 // MAY be `Response` to the `Request`
-// -OR- well-known Update* message
+// -OR- well-known Update *like message
 message Update {
   // Date when this update was sent.
   int64 date = 1;
@@ -21,7 +21,9 @@ message Request {
   string id = 1;
   // /path/to/pkg/Service.Method
   string path = 2;
-  // Method *related @type arguments
+  // Metadata. Headers
+  map<string, string> meta = 4;
+  // Method *related request @type arguments
   google.protobuf.Any data = 3;
 }
 
@@ -29,10 +31,12 @@ message Request {
 message Response {
   // Client request id
   string id = 1;
-  // RPC failure status
-  google.rpc.Status err = 2;
+  // Metadata. Headers
+  map<string, string> meta = 4;
   // Result payload data
   google.protobuf.Any data = 3;
+  // RPC failure status
+  google.rpc.Status err = 2;
 }
 
 message UpdateSignedOut {

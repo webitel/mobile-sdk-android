@@ -114,11 +114,15 @@ message ChatList {
 // 
 message SendMessageRequest {
 
+  // Client associated message id.
+  // DEFAULT: Connect.Request.id
+  string id = 4;
+
   // The destination where the message will be sent.
   // - peer{ type:"chat", id: $chat_id }
   // - peer{ type:"user", id: $user_id }
   // Missing peer - points TO the default
-  // portal service chat Bot dialog.
+  // portal "Service" (bot) chat dialog.
   webitel.chat.Peer peer = 1;
 
   // Media file uploaded.
@@ -147,7 +151,6 @@ message ReadHistoryRequest {
   int64 max_id = 2;
 }
 
-
 // ------------------ Update(s) ------------------ //
 
 enum Disposition {
@@ -157,6 +160,10 @@ enum Disposition {
 
 // New message in a chat history.
 message UpdateNewMessage {
+
+  // OPTIONAL. Client [send] message id.
+  // DEFAULT: Connect.Request.id
+  string id = 3;
 
   // Disposition of the current user.
   Disposition dispo = 1;
@@ -184,7 +191,7 @@ message UpdateLeftMember {
 }
 
 // Update about that the chat dialog is complete.
-// NOTE: Next Messages.SendMessage call will open NEW chat dialog.
+// NOTE: Next Messages.SendMessage call will open NEW dialog.chat
 message UpdateChatComplete {
 
   // Chat [TO] Update.

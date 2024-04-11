@@ -74,7 +74,7 @@ internal class WebitelChat(
 
     override fun onNewMessage(message: UpdateNewMessage) {
         val dialog = dialogs.firstOrNull { it.id == message.message.chat.id }
-        val m = createMessageFromResponse(message.message)
+        val m = createMessageFromResponse(message.id ?: "", message.message)
         if (dialog == null) {
             createDialogRequest(object : CallbackListener<List<Dialog>> {
                 override fun onSuccess(t: List<Dialog>) {
@@ -99,7 +99,10 @@ internal class WebitelChat(
         options: Message.options,
         callback: MessageCallbackListener
     ) {
-        val reqId = UUID.randomUUID().toString()
+        val sengId = options.sendId
+        val reqId: String = if(sengId.isNullOrEmpty()) UUID.randomUUID().toString()
+        else sengId
+
         val message = getMessageFromOptions(reqId, options)
 
         callback.onSend(message)
@@ -244,7 +247,7 @@ internal class WebitelChat(
         callback: MessageCallbackListener
     ) {
         val request = Connect.Request.newBuilder()
-            .setId(message.reqId)
+            .setId(message.sendId)
             .setPath(ChatMessagesGrpc.getSendMessageMethod().bareMethodName)
             .setData(Any.newBuilder().pack(messageRequest))
             .build()
@@ -253,20 +256,10 @@ internal class WebitelChat(
 
         cacheRequests.newRequest(mc)
 
-        if (chatApi.isStateReady()) {
-            sendNextMessageFromQueue()
-
-        } else {
-            chatApi.ping(object : CallbackListener<Unit> {
-                override fun onSuccess(t: Unit) {
-                    sendNextMessageFromQueue()
-                }
-
-                override fun onError(e: Error) {
-                    cacheRequests.onConnectionError(e)
-                }
-            })
+        if (!chatApi.isStateReady()) {
+            chatApi.openConnection()
         }
+        sendNextMessageFromQueue()
     }
 
 
@@ -300,20 +293,10 @@ internal class WebitelChat(
 
         cacheRequests.newRequest(mc)
 
-        if (chatApi.isStateReady()) {
-            sendRequests()
-
-        } else {
-            chatApi.ping(object : CallbackListener<Unit> {
-                override fun onSuccess(t: Unit) {
-                    sendRequests()
-                }
-
-                override fun onError(e: Error) {
-                    cacheRequests.onConnectionError(e)
-                }
-            })
+        if (!chatApi.isStateReady()) {
+            chatApi.openConnection()
         }
+        sendRequests()
     }
 
 
@@ -347,20 +330,10 @@ internal class WebitelChat(
 
         cacheRequests.newRequest(mc)
 
-        if (chatApi.isStateReady()) {
-            sendRequests()
-
-        } else {
-            chatApi.ping(object : CallbackListener<Unit> {
-                override fun onSuccess(t: Unit) {
-                    sendRequests()
-                }
-
-                override fun onError(e: Error) {
-                    cacheRequests.onConnectionError(e)
-                }
-            })
+        if (!chatApi.isStateReady()) {
+            chatApi.openConnection()
         }
+        sendRequests()
     }
 
 
@@ -428,20 +401,10 @@ internal class WebitelChat(
 
         cacheRequests.newRequest(mc)
 
-        if (chatApi.isStateReady()) {
-            sendRequests()
-
-        } else {
-            chatApi.ping(object : CallbackListener<Unit> {
-                override fun onSuccess(t: Unit) {
-                    sendRequests()
-                }
-
-                override fun onError(e: Error) {
-                    cacheRequests.onConnectionError(e)
-                }
-            })
+        if (!chatApi.isStateReady()) {
+            chatApi.openConnection()
         }
+        sendRequests()
     }
 
 
@@ -450,13 +413,7 @@ internal class WebitelChat(
         message: WebitelMessage,
         dispo: Messages.Disposition
     ) {
-        if (dispo == Messages.Disposition.Incoming) {
-            dialog.onReceiveNewMessage(message)
-        } else if (dispo == Messages.Disposition.Outgoing) {
-//            val lastMessage = dialog.lastMessage
-//            if (lastMessage == null || (message.id > lastMessage.id))
-//                dialog.onReceiveNewMessage(message)
-        }
+        dialog.onReceiveNewMessage(message)
         setTopMessage(dialog, message)
     }
 
@@ -534,11 +491,11 @@ internal class WebitelChat(
                         val m = members[(it.from.id.toIntOrNull() ?: 1) - 1]
                         messages.add(
                             WebitelMessage(
-                                reqId = null,
+                                sendId = "",
                                 text = it.text,
                                 file = toFile(it.file),
                                 from = m,
-                                isIncoming = session.invoke()?.chatAccount?.id != m.id,
+                                isIncoming = !isCurrentMember(m),
                                 _id = it.id,
                                 _sentAt = it.date
                             )
@@ -598,7 +555,7 @@ internal class WebitelChat(
 
                     } else {
                         val message = if (chat.message != null)
-                            createMessageFromResponse(chat.message)
+                            createMessageFromResponse("", chat.message)
                         else null
 
                         val nd = WebitelDialog(
@@ -635,18 +592,20 @@ internal class WebitelChat(
 
 
     private fun createMessageFromResponse(
+        sendId: String,
         message: MessageOuterClass.Message
     ): WebitelMessage {
+        val m = Member(
+            id = message.from.id,
+            name = message.from.name,
+            type = message.from.type
+        )
         return WebitelMessage(
-            reqId = null,
+            sendId = sendId,
             text = message.text,
             file = toFile(message.file),
-            from = Member(
-                id = message.from.id,
-                name = message.from.name,
-                type = message.from.type
-            ),
-            isIncoming = session.invoke()?.chatAccount?.id != message.from.id,
+            from = m,
+            isIncoming = !isCurrentMember(m),
             _sentAt = message.date,
             _id = message.id
         )
@@ -679,7 +638,7 @@ internal class WebitelChat(
         o: Message.options
     ): WebitelMessage {
         return WebitelMessage(
-            reqId = reqId,
+            sendId = reqId,
             text = o.text,
             file = if (o.stream == null) null else WebitelFile(
                 o.fileName ?: UUID.randomUUID().toString(),
@@ -708,12 +667,17 @@ internal class WebitelChat(
     }
 
 
+    private fun isCurrentMember(member: Member): Boolean {
+        return member.type == "portal" && member.name == "You"
+    }
+
+
     private fun getCurrentUser(): Member {
         return session.invoke()?.chatAccount
             ?: Member(
                 "unknown",
                 "You",
-                "user"
+                "portal"
             )
     }
 }

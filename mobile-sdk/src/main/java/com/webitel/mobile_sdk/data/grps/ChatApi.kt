@@ -9,6 +9,8 @@ internal interface ChatApi: BaseApi {
     fun startPing()
     fun stopPing()
 
+    fun openConnection()
+
     fun uploadFile(
         streamObserver: StreamObserver<MessageOuterClass.File>
     ): StreamObserver<Media.UploadMedia>

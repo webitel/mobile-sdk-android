@@ -25,6 +25,15 @@ interface PortalClient {
     fun handleFCMNotification(data: Map<String, String>)
 
 
+    fun getConnectState(): ConnectState
+
+    fun addConnectListener(listener: ConnectListener)
+
+    fun removeConnectListener(listener: ConnectListener)
+
+    fun openConnect()
+
+
     /**
      * @param application Application context.
      * @param address Webitel Customer Portal service host address ; e.g.: grpcs://dev.webitel.com:443

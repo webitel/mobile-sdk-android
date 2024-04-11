@@ -4,6 +4,7 @@ import java.io.InputStream
 
 interface Message {
     val id: Long
+    val sendId: String
     val text: String?
     val file: File?
 
@@ -21,6 +22,9 @@ interface Message {
         internal var text: String? = null
             private set
 
+        internal var sendId: String? = null
+            private set
+
         internal var fileName: String? = null
             private set
 
@@ -33,6 +37,7 @@ interface Message {
         internal var listener: MediaUploadListener? = null
             private set
 
+        fun sendId(id: String) = apply { this.sendId = id }
 
         fun withText(text: String) = apply { this.text = text }
 

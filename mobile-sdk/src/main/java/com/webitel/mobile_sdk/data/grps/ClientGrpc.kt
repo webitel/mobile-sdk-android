@@ -15,9 +15,13 @@ import com.webitel.mobile_sdk.domain.Member
 import com.webitel.mobile_sdk.domain.User
 import com.webitel.mobile_sdk.domain.CallbackListener
 import com.webitel.mobile_sdk.domain.Code
+import com.webitel.mobile_sdk.domain.ConnectListener
+import com.webitel.mobile_sdk.domain.ConnectState
 import com.webitel.mobile_sdk.domain.Error
 import com.webitel.mobile_sdk.domain.RegisterResult
 import io.grpc.ConnectivityState
+import io.grpc.Metadata
+import io.grpc.Status
 import io.grpc.StatusRuntimeException
 import io.grpc.stub.StreamObserver
 import webitel.chat.MessageOuterClass
@@ -41,13 +45,14 @@ import java.util.TimerTask
 
 
 internal class ClientGrpc(
-    config: ChannelConfig
-) : ChatApi, AuthApi, VoiceApi {
+    private val config: ChannelConfig
+) : ChatApi, AuthApi, VoiceApi, StreamListener {
 
     private var chatListener: GrpcChatMessageListener? = null
     private var requestObserver: StreamObserver<Request>? = null
     private var timer: Timer? = null
-    private var channel: GrpcChannel
+    private lateinit var channel: GrpcChannel
+    private val connectionListeners = ConnectionListeners()
 
     private val grpcListeners = GrpcListeners()
 
@@ -60,9 +65,27 @@ internal class ClientGrpc(
         Handler(thread.looper)
     }
 
+    private var connectState = ConnectState.DISCONNECTED
+
 
     init {
+        initChannel()
+    }
+
+
+    fun addConnectListener(listener: ConnectListener) {
+        connectionListeners.addListener(listener)
+    }
+
+
+    fun removeConnectListener(listener: ConnectListener) {
+        connectionListeners.removeListener(listener)
+    }
+
+
+    private fun initChannel() {
         channel = GrpcUtils.getChannel(config)
+        channel.setStreamListener(this)
         val connectivityStateWatcher = object : Runnable {
             override fun run() {
                 val state = channel.channel.getState(false)
@@ -74,6 +97,8 @@ internal class ClientGrpc(
 
                     ConnectivityState.SHUTDOWN -> {
                         //Log.e("state", "SHUTDOWN")
+                        channel.setStreamListener(null)
+                        initChannel()
                         return // DISCONNECTED state is final.
                     }
 
@@ -99,6 +124,7 @@ internal class ClientGrpc(
                 channel.channel.notifyWhenStateChanged(state, this)
             }
         }
+
         val state = channel.channel.getState(true)
         channel.channel.notifyWhenStateChanged(state, connectivityStateWatcher)
     }
@@ -380,8 +406,15 @@ internal class ClientGrpc(
     }
 
 
-    fun openConnection() {
-        checkAndOpenConnection()
+    override fun openConnection() {
+        val state = channel.channel.getState(true)
+        if (state == ConnectivityState.TRANSIENT_FAILURE) {
+            channel.channel.resetConnectBackoff()
+            channel.channel.enterIdle()
+            checkAndOpenConnection()
+        } else {
+            checkAndOpenConnection()
+        }
     }
 
 
@@ -674,6 +707,33 @@ internal class ClientGrpc(
         }
 
         handler.post(job)
+    }
+
+
+    fun getConnectState(): ConnectState {
+        return connectState
+    }
+
+
+    override fun onStart(methodName: String) {
+        if (methodName != CustomerGrpc.getConnectMethod().bareMethodName) return
+        connectionListeners.onStateChanged(from = connectState, to = ConnectState.CONNECTING)
+        connectState = ConnectState.CONNECTING
+    }
+
+
+    override fun onReady(methodName: String) {
+        if (methodName != CustomerGrpc.getConnectMethod().bareMethodName) return
+        connectionListeners.onStateChanged(from = connectState, to = ConnectState.READY)
+        connectState = ConnectState.READY
+    }
+
+
+    override fun onClose(methodName: String, status: Status?, trailers: Metadata?) {
+        if (methodName != CustomerGrpc.getConnectMethod().bareMethodName) return
+        ConnectState.DISCONNECTED.message = status.toString()
+        connectionListeners.onStateChanged(from = connectState, to = ConnectState.DISCONNECTED)
+        connectState = ConnectState.DISCONNECTED
     }
 }
 

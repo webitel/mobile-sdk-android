@@ -9,6 +9,7 @@ import io.grpc.ForwardingClientCallListener
 import io.grpc.Metadata
 import io.grpc.Metadata.ASCII_STRING_MARSHALLER
 import io.grpc.MethodDescriptor
+import io.grpc.Status
 
 
 internal class GrpcInterceptor(
@@ -21,6 +22,7 @@ internal class GrpcInterceptor(
     private val ACCEESS_TOKEN_KEY = Metadata.Key.of("x-portal-access", ASCII_STRING_MARSHALLER)
     private var accessToken: String = ""
 
+    private var listener: StreamListener? = null
 
     override fun <ReqT, RespT> interceptCall(
         method: MethodDescriptor<ReqT, RespT>?,
@@ -34,10 +36,20 @@ internal class GrpcInterceptor(
 
             override fun start(responseListener: Listener<RespT>?, headers: Metadata?) {
                 setupHeaders(headers, method?.bareMethodName ?: "undefined bareMethodName")
-
+                listener?.onStart(method?.bareMethodName.toString())
                 super.start(object : ForwardingClientCallListener.SimpleForwardingClientCallListener<RespT>(responseListener) {
                     override fun onMessage(message: RespT) {
                         super.onMessage(message)
+                    }
+
+                    override fun onReady() {
+                        listener?.onReady(method?.bareMethodName.toString())
+                        super.onReady()
+                    }
+
+                    override fun onClose(status: Status?, trailers: Metadata?) {
+                        listener?.onClose(method?.bareMethodName.toString(), status, trailers)
+                        super.onClose(status, trailers)
                     }
                 }, headers)
             }
@@ -52,6 +64,11 @@ internal class GrpcInterceptor(
 
     fun getAccessToken(): String {
         return accessToken
+    }
+
+
+    fun setStreamListener(l: StreamListener?) {
+        listener = l
     }
 
 

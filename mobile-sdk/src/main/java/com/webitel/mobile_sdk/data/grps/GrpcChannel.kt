@@ -50,4 +50,9 @@ internal class GrpcChannel(
     fun getDeviceId(): String {
         return config.deviceId
     }
+
+
+    fun setStreamListener(listener: StreamListener?) {
+        interceptor.setStreamListener(listener)
+    }
 }

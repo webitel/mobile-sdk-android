@@ -51,18 +51,19 @@ message TokenRequest {
   // Extensions
   // + user     ; End-User account profile
   // + call     ; SIP account credentials
-  // + chat     ; IM conversation dialog state
+  // + chat     ; IM account details
   repeated string response_type = 5;
   
   // Refresh token string to obtain NEW access token.
   // REQUIRED. When grant_type is set to "refresh_token".
   string refresh_token = 11;
 
-  // Identity of the public end-User account.
+  // Identity of the end-User account association.
   // REQUIRED. When grant_type is set to "identity".
   Identity identity = 12;
 
   // Authorization code grant.
+  // REQUIRED. When grant_type is set to "authorization_code".
   string code = 13;
 
   // -------------- Extensions ---------------- //
@@ -97,8 +98,8 @@ message AccessToken {
 
   // ---------------- OpenID Connect ---------------- //
 
-  // OpenID Connect. Not supported yet
-  string id_token = 11;
+  // // OpenID Connect. Not supported yet
+  // string id_token = 11;
 
   // ------------------ Extensions ------------------ //
   
