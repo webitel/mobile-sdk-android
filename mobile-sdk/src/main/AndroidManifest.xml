@@ -13,7 +13,7 @@
         android:fullBackupContent="@xml/backup_rules"
         android:exported="true"
         android:extractNativeLibs="true"
-        android:usesCleartextTraffic="true">
+        android:usesCleartextTraffic="false">
         <service
             android:name="com.webitel.mobile_sdk.data.calls.telecom.CallsService4"
             android:enabled="true"
