@@ -11,6 +11,8 @@ internal interface ChatApi: BaseApi {
 
     fun openConnection()
 
+    fun closeConnection()
+
     fun uploadFile(
         streamObserver: StreamObserver<MessageOuterClass.File>
     ): StreamObserver<Media.UploadMedia>

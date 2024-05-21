@@ -185,6 +185,10 @@ internal class WebitelPortalClient(
         grpc.openConnection()
     }
 
+    override fun closeConnect() {
+        grpc.closeConnection()
+    }
+
 
     private fun setupUser() {
         val t = authRepository.getToken()

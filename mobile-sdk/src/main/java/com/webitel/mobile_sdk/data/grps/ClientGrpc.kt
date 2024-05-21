@@ -418,6 +418,11 @@ internal class ClientGrpc(
     }
 
 
+    override fun closeConnection() {
+        stopStream()
+    }
+
+
     @Synchronized
     private fun postData(request: Request) {
         checkAndOpenConnection()

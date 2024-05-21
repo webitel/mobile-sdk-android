@@ -33,6 +33,8 @@ interface PortalClient {
 
     fun openConnect()
 
+    fun closeConnect()
+
 
     /**
      * @param application Application context.
