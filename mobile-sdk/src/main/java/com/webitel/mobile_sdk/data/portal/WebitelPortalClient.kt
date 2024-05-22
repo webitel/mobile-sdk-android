@@ -39,6 +39,7 @@ internal class WebitelPortalClient(
     private val voice: VoiceClient
 
     private var userSession: UserSession? = null
+    private val logger: WLogger
 
 
     init {
@@ -46,11 +47,14 @@ internal class WebitelPortalClient(
             userSession
         }
 
+        logger = WLogger(client.logLevel)
+
         grpc = ClientGrpc(
-            getChannelConfig()
+            getChannelConfig(),
+            logger
         )
 
-        chat = WebitelChat(grpc, session)
+        chat = WebitelChat(grpc, session, logger)
         voice = WebitelVoice(grpc)
 
         authRepository = AuthRepository(

@@ -1,6 +1,7 @@
 package com.webitel.mobile_sdk.domain
 
 import android.app.Application
+import android.util.Log
 import com.webitel.mobile_sdk.data.portal.WebitelPortalClient
 import com.webitel.mobile_sdk.data.LibraryModule
 
@@ -51,6 +52,7 @@ interface PortalClient {
         internal var name: String = ""
         internal var fcmToken: String = ""
         internal var deviceId: String = ""
+        internal var logLevel: LogLevel = LogLevel.ERROR
 
 
         /**
@@ -66,6 +68,19 @@ interface PortalClient {
 
 
         fun deviceId(value: String) = apply { this.deviceId = value }
+
+
+        /**
+         * The logLevel method sets the log level for error and message reporting.
+         * Specifies the log level to set. The following are the valid options described in ascending order:
+         *  - debug — Specifies a log level in which all messages are logged.
+         *  - info — Specifies a log level in which informational, warning, and error messages are logged.
+         *  - warn — Specifies a log level in which warning and error messages are logged.
+         *  - error — Specifies a log level in which only error messages are logged.
+         *  - off — disables all logs.
+         *  Default is LogLevel.error
+         */
+        fun logLevel(value: LogLevel) = apply { this.logLevel = value }
 
 
 //        /**

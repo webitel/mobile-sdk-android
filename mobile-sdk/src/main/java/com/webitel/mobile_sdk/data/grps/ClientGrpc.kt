@@ -11,6 +11,7 @@ import com.webitel.mobile_sdk.data.auth.LoginResponse
 import com.webitel.mobile_sdk.data.calls.VoiceApi
 import com.webitel.mobile_sdk.data.calls.sip.SipConfig
 import com.webitel.mobile_sdk.data.portal.UserSession
+import com.webitel.mobile_sdk.data.portal.WLogger
 import com.webitel.mobile_sdk.domain.Member
 import com.webitel.mobile_sdk.domain.User
 import com.webitel.mobile_sdk.domain.CallbackListener
@@ -45,7 +46,8 @@ import java.util.TimerTask
 
 
 internal class ClientGrpc(
-    private val config: ChannelConfig
+    private val config: ChannelConfig,
+    private val logger: WLogger
 ) : ChatApi, AuthApi, VoiceApi, StreamListener {
 
     private var chatListener: GrpcChatMessageListener? = null
@@ -426,6 +428,7 @@ internal class ClientGrpc(
     @Synchronized
     private fun postData(request: Request) {
         checkAndOpenConnection()
+        logger.debug("request", request.toString())
         requestObserver?.onNext(request)
     }
 
@@ -617,7 +620,7 @@ internal class ClientGrpc(
                 }
 
                 override fun onError(t: Throwable) {
-                    Log.e("Connect.onError", t.message.toString())
+                    logger.error("connect", t.toString())
                     stopStream()
 
                     val e = parseError(t)
@@ -655,6 +658,7 @@ internal class ClientGrpc(
     private fun parseUpdate(update: Update) {
         if (update.data.`is`(Response::class.java)) {
             val response = update.data.unpack(Response::class.java)
+            logger.debug("response", response.toString())
             response?.let {
                 grpcListeners.onResponse(it)
                 chatListener?.onResponse(it)
@@ -662,9 +666,12 @@ internal class ClientGrpc(
 
         } else if (update.data.`is`(Messages.UpdateNewMessage::class.java)) {
             val message = update.data.unpack(Messages.UpdateNewMessage::class.java)
+            logger.debug("UpdateNewMessage", message.toString())
             message?.let {
                 chatListener?.onNewMessage(it)
             }
+        } else {
+            logger.debug("notImplementedEvent", update.toString())
         }
     }
 
@@ -722,6 +729,7 @@ internal class ClientGrpc(
 
     override fun onStart(methodName: String) {
         if (methodName != CustomerGrpc.getConnectMethod().bareMethodName) return
+        logger.debug("onStateChanged", "from = $connectState, to = ${ConnectState.CONNECTING}")
         connectionListeners.onStateChanged(from = connectState, to = ConnectState.CONNECTING)
         connectState = ConnectState.CONNECTING
     }
@@ -729,6 +737,7 @@ internal class ClientGrpc(
 
     override fun onReady(methodName: String) {
         if (methodName != CustomerGrpc.getConnectMethod().bareMethodName) return
+        logger.debug("onStateChanged", "from = $connectState, to = ${ConnectState.READY}")
         connectionListeners.onStateChanged(from = connectState, to = ConnectState.READY)
         connectState = ConnectState.READY
     }
@@ -737,6 +746,7 @@ internal class ClientGrpc(
     override fun onClose(methodName: String, status: Status?, trailers: Metadata?) {
         if (methodName != CustomerGrpc.getConnectMethod().bareMethodName) return
         ConnectState.DISCONNECTED.message = status.toString()
+        logger.debug("onStateChanged", "from = $connectState, to = ${ConnectState.DISCONNECTED}")
         connectionListeners.onStateChanged(from = connectState, to = ConnectState.DISCONNECTED)
         connectState = ConnectState.DISCONNECTED
     }

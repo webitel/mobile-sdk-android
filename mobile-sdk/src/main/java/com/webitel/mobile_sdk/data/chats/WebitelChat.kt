@@ -9,6 +9,7 @@ import com.webitel.mobile_sdk.data.grps.`is`
 import com.webitel.mobile_sdk.data.grps.pack
 import com.webitel.mobile_sdk.data.grps.unpack
 import com.webitel.mobile_sdk.data.portal.UserSession
+import com.webitel.mobile_sdk.data.portal.WLogger
 import com.webitel.mobile_sdk.domain.CallbackListener
 import com.webitel.mobile_sdk.domain.ChatClient
 import com.webitel.mobile_sdk.domain.Code
@@ -37,6 +38,7 @@ import java.util.concurrent.CountDownLatch
 internal class WebitelChat(
     private val chatApi: ChatApi,
     private val session: () -> UserSession?,
+    private val logger: WLogger,
     private val cacheRequests: CacheRequests = CacheRequests()
 ) : ChatClient, GrpcChatMessageListener, ChatApiDelegate {
 
@@ -447,6 +449,12 @@ internal class WebitelChat(
                 request.callback.onSent(
                     request.message
                 )
+            } else {
+                val err = Error(
+                    message = "Bad response. UpdateNewMessage not found. $response",
+                    code = Code.DATA_LOSS
+                )
+                request.callback.onError(err)
             }
         }
     }
@@ -516,6 +524,8 @@ internal class WebitelChat(
                 } catch (_: Exception) {
                 }
             }
+        } else {
+            request.callback.onSuccess(arrayListOf())
         }
     }
 
@@ -586,6 +596,9 @@ internal class WebitelChat(
                     )
                 }
 
+            } else {
+                dialogs.clear()
+                request.callback.onSuccess(dialogs)
             }
         }
     }

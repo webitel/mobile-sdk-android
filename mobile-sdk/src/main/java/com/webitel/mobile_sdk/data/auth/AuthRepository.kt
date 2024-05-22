@@ -215,6 +215,13 @@ internal class AuthRepository(
                         RegisterResult()
                     )
                 }catch (_: Exception){}
+            } else {
+                request.onError(
+                    Error(
+                        message = "Could not UNPACK response. ${response}",
+                        code = Code.DATA_LOSS
+                    )
+                )
             }
         }
     }
