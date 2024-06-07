@@ -51,6 +51,16 @@ internal class WebitelDialog(
         apiDelegate.downloadFile(this, fileId, observer)
     }
 
+    override fun sendPostback(
+        mid: Long,
+        text: String,
+        code: String,
+        sendId: String?,
+        callback: MessageCallbackListener
+    ) {
+        apiDelegate.sendPostback(this, mid, text, code, sendId, callback)
+    }
+
 
     override fun addListener(listener: DialogListener) {
         listeners.addListener(listener)

@@ -8,13 +8,15 @@ import com.webitel.mobile_sdk.data.grps.GrpcChatMessageListener
 import com.webitel.mobile_sdk.data.grps.`is`
 import com.webitel.mobile_sdk.data.grps.pack
 import com.webitel.mobile_sdk.data.grps.unpack
-import com.webitel.mobile_sdk.data.portal.UserSession
 import com.webitel.mobile_sdk.data.portal.WLogger
+import com.webitel.mobile_sdk.domain.Button
+import com.webitel.mobile_sdk.domain.ButtonRow
 import com.webitel.mobile_sdk.domain.CallbackListener
 import com.webitel.mobile_sdk.domain.ChatClient
 import com.webitel.mobile_sdk.domain.Code
 import com.webitel.mobile_sdk.domain.Dialog
 import com.webitel.mobile_sdk.domain.Error
+import com.webitel.mobile_sdk.domain.Keyboard
 import com.webitel.mobile_sdk.domain.Member
 import com.webitel.mobile_sdk.domain.Message
 import com.webitel.mobile_sdk.domain.MessageCallbackListener
@@ -37,7 +39,6 @@ import java.util.concurrent.CountDownLatch
 
 internal class WebitelChat(
     private val chatApi: ChatApi,
-    private val session: () -> UserSession?,
     private val logger: WLogger,
     private val cacheRequests: CacheRequests = CacheRequests()
 ) : ChatClient, GrpcChatMessageListener, ChatApiDelegate {
@@ -83,7 +84,7 @@ internal class WebitelChat(
                     val d = dialogs.firstOrNull {
                         it.id == message.message.chat.id
                     } ?: return
-                    sendEventToDialog(d, m, message.dispo)
+                    sendEventToDialog(d, m)
                 }
 
                 override fun onError(e: Error) {
@@ -91,7 +92,7 @@ internal class WebitelChat(
                 }
             })
         } else {
-            sendEventToDialog(dialog, m, message.dispo)
+            sendEventToDialog(dialog, m)
         }
     }
 
@@ -101,13 +102,9 @@ internal class WebitelChat(
         options: Message.options,
         callback: MessageCallbackListener
     ) {
-        val sengId = options.sendId
-        val reqId: String = if(sengId.isNullOrEmpty()) UUID.randomUUID().toString()
-        else sengId
-
-        val message = getMessageFromOptions(reqId, options)
-
-        callback.onSend(message)
+        val sendId = options.sendId
+        val reqId: String = if(sendId.isNullOrEmpty()) UUID.randomUUID().toString()
+        else sendId
 
         val peer = PeerOuterClass.Peer.newBuilder()
             .setId(dialog.id)
@@ -115,7 +112,7 @@ internal class WebitelChat(
             .build()
 
         if (options.stream != null) {
-            uploadFile(message, options, peer, callback)
+            uploadFile(reqId, options, peer, callback)
 
         } else {
             if (options.text.isNullOrEmpty()) return
@@ -126,8 +123,40 @@ internal class WebitelChat(
                 .setText(options.text)
                 .build()
 
-            sendMessage(message, messageRequest, callback)
+            sendMessage(reqId, messageRequest, callback)
         }
+    }
+
+
+    override fun sendPostback(
+        dialog: WebitelDialog,
+        mid: Long,
+        text: String,
+        code: String,
+        sendId: String?,
+        callback: MessageCallbackListener
+    ) {
+        val reqId: String = if(sendId.isNullOrEmpty()) UUID.randomUUID().toString()
+        else sendId
+
+        val peer = PeerOuterClass.Peer.newBuilder()
+            .setId(dialog.id)
+            .setType(dialog.type)
+            .build()
+
+        val postback = MessageOuterClass.Postback.newBuilder()
+            .setText(text)
+            .setCode(code)
+            .setMid(mid)
+            .build()
+
+        val messageRequest = Messages.SendMessageRequest
+            .newBuilder()
+            .setPeer(peer)
+            .setPostback(postback)
+            .build()
+
+        sendMessage(reqId, messageRequest, callback)
     }
 
 
@@ -162,7 +191,7 @@ internal class WebitelChat(
 
 
     private fun uploadFile(
-        message: WebitelMessage,
+        sendId: String,
         options: Message.options,
         peer: PeerOuterClass.Peer,
         callback: MessageCallbackListener
@@ -171,8 +200,6 @@ internal class WebitelChat(
         val responseStreamObserver = object : StreamObserver<MessageOuterClass.File> {
             override fun onNext(value: MessageOuterClass.File?) {
                 if (value != null) {
-                    message.file?.setFileId(value.id)
-
                     val messageRequest = Messages.SendMessageRequest
                         .newBuilder()
                         .setPeer(peer)
@@ -181,13 +208,12 @@ internal class WebitelChat(
                     if (!options.text.isNullOrEmpty())
                         messageRequest.text = options.text
 
-                    sendMessage(message, messageRequest.build(), callback)
+                    sendMessage(sendId, messageRequest.build(), callback)
                 }
             }
 
             override fun onError(t: Throwable) {
                 val err = parseError(t)
-                message.setError(err)
                 callback.onError(err)
                 countDownLatch.countDown()
             }
@@ -198,13 +224,15 @@ internal class WebitelChat(
         }
 
         try {
+            val fileName = options.fileName ?: UUID.randomUUID().toString()
+            val mimeType = options.mimeType ?: "application/octet-stream"
             val st = chatApi.uploadFile(responseStreamObserver)
             val request1 = UploadMedia
                 .newBuilder()
                 .setFile(
                     Media.InputFile.newBuilder()
-                        .setType(message.file?.type)
-                        .setName(message.file?.fileName)
+                        .setType(mimeType)
+                        .setName(fileName)
                 )
                 .build()
 
@@ -236,7 +264,6 @@ internal class WebitelChat(
 
         } catch (e: Exception) {
             val err = parseError(e)
-            message.setError(err)
             callback.onError(err)
             Log.e("uploadFile", e.message.toString())
         }
@@ -244,17 +271,17 @@ internal class WebitelChat(
 
 
     private fun sendMessage(
-        message: WebitelMessage,
+        sendId: String,
         messageRequest: Messages.SendMessageRequest,
         callback: MessageCallbackListener
     ) {
         val request = Connect.Request.newBuilder()
-            .setId(message.sendId)
+            .setId(sendId)
             .setPath(ChatMessagesGrpc.getSendMessageMethod().bareMethodName)
             .setData(Any.newBuilder().pack(messageRequest))
             .build()
 
-        val mc = CacheRequests.MessageRequestCache(callback, request, message)
+        val mc = CacheRequests.MessageRequestCache(callback, request)
 
         cacheRequests.newRequest(mc)
 
@@ -413,7 +440,6 @@ internal class WebitelChat(
     private fun sendEventToDialog(
         dialog: WebitelDialog,
         message: WebitelMessage,
-        dispo: Messages.Disposition
     ) {
         dialog.onReceiveNewMessage(message)
         setTopMessage(dialog, message)
@@ -431,24 +457,30 @@ internal class WebitelChat(
                 code = Code.forNumber(response.err.code)
             )
 
-            request.message.setError(err)
             request.callback.onError(err)
 
         } else {
             if (response.data.`is`(UpdateNewMessage::class.java)) {
-                val u = response.data.unpack(UpdateNewMessage::class.java)
+                val messageProto = response.data.unpack(UpdateNewMessage::class.java)?.message
 
-                if (u != null) {
-                    request.message.setId(u.message.id)
-                    request.message.setSendAt(u.message.date)
-                    val d = dialogs.firstOrNull { it.id == u.message.chat.id }
+                if (messageProto != null) {
+                    val message = createMessageFromResponse(request.request.id, messageProto)
+                    val d = dialogs.firstOrNull { it.id == messageProto.chat.id }
                     d?.let {
-                        setTopMessage(it, request.message)
+                        setTopMessage(it, message)
                     }
+
+                    request.callback.onSent(
+                        message
+                    )
+                } else {
+                    val err = Error(
+                        message = "Bad response.  MessageOuterClass.Message not found. $response",
+                        code = Code.DATA_LOSS
+                    )
+                    request.callback.onError(err)
                 }
-                request.callback.onSent(
-                    request.message
-                )
+
             } else {
                 val err = Error(
                     message = "Bad response. UpdateNewMessage not found. $response",
@@ -504,8 +536,10 @@ internal class WebitelChat(
                                 file = toFile(it.file),
                                 from = m,
                                 isIncoming = !isCurrentMember(m),
-                                _id = it.id,
-                                _sentAt = it.date
+                                id = it.id,
+                                sentAt = it.date,
+                                postback = if (it.hasPostback()) toPostback(it.postback) else null,
+                                keyboard = if (it.hasKeyboard()) toKeyboard(it.keyboard) else null
                             )
                         )
                     } catch (_: Exception) {
@@ -526,6 +560,59 @@ internal class WebitelChat(
             }
         } else {
             request.callback.onSuccess(arrayListOf())
+        }
+    }
+
+    private fun toPostback(value: MessageOuterClass.Postback?): Message.Postback? {
+        return if (value == null) null else object : Message.Postback {
+            override val text: String
+                get() = value.text
+            override val mid: Long
+                get() = value.mid
+            override val code: String
+                get() = value.code
+        }
+    }
+
+
+    private fun toKeyboard(value: MessageOuterClass.ReplyMarkup?): Keyboard? {
+        if (value == null) return null
+        return Keyboard(value.noInput, toRows(value.buttonsList))
+    }
+
+
+    private fun toRows(value: List<MessageOuterClass.ButtonRow>): List<ButtonRow> {
+        val rows = arrayListOf<ButtonRow>()
+        for (row in value) {
+            val buttonRow = toButtonRow(row)
+            if (buttonRow.buttons.isNotEmpty()) {
+                rows.add(buttonRow)
+            }
+        }
+        return rows
+    }
+
+
+    private fun toButtonRow(value: MessageOuterClass.ButtonRow): ButtonRow {
+        val buttons = arrayListOf<Button>()
+        for (item in value.rowList) {
+            val button = toButton(item)
+            if (button != null) {
+                buttons.add(button)
+            }
+        }
+        return ButtonRow(buttons)
+    }
+
+
+    private fun toButton(value: MessageOuterClass.Button): Button? {
+        return if (value.hasCode()) {
+            Button.Postback(text = value.text, code = value.code)
+        } else if (value.hasUrl()) {
+            Button.Url(text = value.text, url = value.url)
+        } else {
+            logger.warn("toButton", "button type not implemented yet; $value")
+            null
         }
     }
 
@@ -619,8 +706,10 @@ internal class WebitelChat(
             file = toFile(message.file),
             from = m,
             isIncoming = !isCurrentMember(m),
-            _sentAt = message.date,
-            _id = message.id
+            sentAt = message.date,
+            id = message.id,
+            postback = if (message.hasPostback()) toPostback(message.postback) else null,
+            keyboard = if (message.hasKeyboard()) toKeyboard(message.keyboard) else null
         )
     }
 
@@ -646,25 +735,6 @@ internal class WebitelChat(
     }
 
 
-    private fun getMessageFromOptions(
-        reqId: String,
-        o: Message.options
-    ): WebitelMessage {
-        return WebitelMessage(
-            sendId = reqId,
-            text = o.text,
-            file = if (o.stream == null) null else WebitelFile(
-                o.fileName ?: UUID.randomUUID().toString(),
-                o.mimeType ?: "application/octet-stream",
-                o.stream?.available()?.toLong() ?: 0L,
-                ""
-            ),
-            from = getCurrentUser(),
-            isIncoming = false
-        )
-    }
-
-
     private fun parseError(t: Throwable): Error {
         return if (t is StatusRuntimeException) {
             Error(
@@ -682,15 +752,5 @@ internal class WebitelChat(
 
     private fun isCurrentMember(member: Member): Boolean {
         return member.type == "portal" && member.name == "You"
-    }
-
-
-    private fun getCurrentUser(): Member {
-        return session.invoke()?.chatAccount
-            ?: Member(
-                "unknown",
-                "You",
-                "portal"
-            )
     }
 }

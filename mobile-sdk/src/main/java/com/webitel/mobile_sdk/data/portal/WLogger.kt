@@ -17,6 +17,12 @@ internal class WLogger(private val level: LogLevel) {
         }
     }
 
+    fun warn(tag: String, message: String) {
+        if (level <= LogLevel.WARN) {
+            Log.w(tag, message)
+        }
+    }
+
     fun error(tag: String, message: String) {
         if (level <= LogLevel.ERROR) {
             Log.e(tag, message)

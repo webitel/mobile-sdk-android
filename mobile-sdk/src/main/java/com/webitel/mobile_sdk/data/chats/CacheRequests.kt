@@ -3,7 +3,6 @@ package com.webitel.mobile_sdk.data.chats
 import com.webitel.mobile_sdk.domain.CallbackListener
 import com.webitel.mobile_sdk.domain.Dialog
 import com.webitel.mobile_sdk.domain.Error
-import com.webitel.mobile_sdk.domain.HistoryRequest
 import com.webitel.mobile_sdk.domain.Message
 import com.webitel.mobile_sdk.domain.MessageCallbackListener
 import webitel.portal.Connect
@@ -84,7 +83,6 @@ internal class CacheRequests(
     fun onConnectionError(e: Error) {
         sendMessageRequest = null
         messageRequests.forEach {
-            it.message.setError(e)
             it.callback.onError(e)
         }
         messageRequests.clear()
@@ -128,7 +126,6 @@ internal class CacheRequests(
     internal class MessageRequestCache(
         val callback: MessageCallbackListener,
         val request: Connect.Request,
-        val message: WebitelMessage
     )
 
 

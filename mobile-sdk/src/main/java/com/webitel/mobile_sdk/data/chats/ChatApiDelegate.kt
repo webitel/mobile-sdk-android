@@ -36,4 +36,14 @@ internal interface ChatApiDelegate {
         fileId: String,
         observer: StreamObserver
     )
+
+
+    fun sendPostback(
+        dialog: WebitelDialog,
+        mid: Long,
+        text: String,
+        code: String,
+        sendId: String? = null,
+        callback: MessageCallbackListener
+    )
 }

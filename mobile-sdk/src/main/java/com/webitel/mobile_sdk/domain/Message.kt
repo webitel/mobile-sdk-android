@@ -13,9 +13,17 @@ interface Message {
     val isIncoming: Boolean
 
     val sentAt: Long
-    val editAt: Long
 
-    val error: Error?
+
+    /**
+     * Postback. Reply Button Clicked.
+     * */
+    val postback: Postback?
+
+    /**
+     * Keyboard. Buttons.
+     * */
+    val keyboard: Keyboard?
 
 
     class options {
@@ -49,6 +57,21 @@ interface Message {
 
         fun uploadListener(listener: MediaUploadListener) = apply { this.listener = listener }
     }
+
+
+    /**
+     * Postback. Reply Button Clicked.
+     *
+     * - [text] - Button's display caption.
+     * - [code] - Data associated with the Button.
+     * - [mid] - Message ID of the button.
+     * */
+    interface Postback {
+        val text: String
+        val mid: Long
+        val code: String
+    }
+
 
     interface File {
         val id: String

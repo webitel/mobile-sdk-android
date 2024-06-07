@@ -54,7 +54,7 @@ internal class WebitelPortalClient(
             logger
         )
 
-        chat = WebitelChat(grpc, session, logger)
+        chat = WebitelChat(grpc, logger)
         voice = WebitelVoice(grpc)
 
         authRepository = AuthRepository(
