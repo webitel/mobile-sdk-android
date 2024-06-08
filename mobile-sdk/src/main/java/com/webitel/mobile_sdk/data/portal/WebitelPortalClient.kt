@@ -162,6 +162,11 @@ internal class WebitelPortalClient(
     }
 
 
+    override fun setAccessTokenHeader(token: String) {
+        authRepository.setAccessTokenHeader(token)
+    }
+
+
     override fun registerDevice(pushToken: String, callback: CallbackListener<RegisterResult>) {
         authRepository.registerFcm(pushToken, callback)
     }

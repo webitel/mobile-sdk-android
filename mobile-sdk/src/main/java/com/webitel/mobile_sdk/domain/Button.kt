@@ -5,7 +5,7 @@ package com.webitel.mobile_sdk.domain
  * @param noInput  An option used to block input to force.
  * @param rows Markup of button(s)
  */
-data class Keyboard(val noInput: Boolean, val rows: List<ButtonRow>)
+data class ReplyMarkup(val noInput: Boolean, val rows: List<ButtonRow>)
 
 /**
  * @param buttons Button(s) in a row

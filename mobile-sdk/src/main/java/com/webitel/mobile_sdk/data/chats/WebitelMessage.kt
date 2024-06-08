@@ -1,8 +1,8 @@
 package com.webitel.mobile_sdk.data.chats
 
-import com.webitel.mobile_sdk.domain.Keyboard
 import com.webitel.mobile_sdk.domain.Member
 import com.webitel.mobile_sdk.domain.Message
+import com.webitel.mobile_sdk.domain.ReplyMarkup
 
 
 internal class WebitelMessage(
@@ -14,5 +14,5 @@ internal class WebitelMessage(
     override val id: Long,
     override val sentAt: Long,
     override val postback: Message.Postback?,
-    override val keyboard: Keyboard?,
+    override val replyMarkup: ReplyMarkup?,
 ): Message

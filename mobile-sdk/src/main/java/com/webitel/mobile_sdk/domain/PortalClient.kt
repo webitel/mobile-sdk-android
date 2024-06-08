@@ -16,7 +16,15 @@ interface PortalClient {
 
     fun getUserSession(callback: CallbackListener<Session>)
 
+    /**
+     * Sets and immediately validates the token. The result will be returned in the callback
+     * */
     fun setAccessToken(token: String, callback: CallbackListener<Session>)
+
+    /**
+     * Sets the token in headers without validation
+     */
+    fun  setAccessTokenHeader(token: String)
 
     /**
      * Register device PUSH subscription

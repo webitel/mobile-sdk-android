@@ -21,9 +21,9 @@ interface Message {
     val postback: Postback?
 
     /**
-     * Keyboard. Buttons.
+     * Reply markup (buttons)
      * */
-    val keyboard: Keyboard?
+    val replyMarkup: ReplyMarkup?
 
 
     class options {

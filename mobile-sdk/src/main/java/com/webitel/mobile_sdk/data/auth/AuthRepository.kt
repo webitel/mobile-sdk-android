@@ -119,6 +119,11 @@ internal class AuthRepository(
     }
 
 
+    fun setAccessTokenHeader(token: String) {
+        authApi.setAccessTokenHeader(token)
+    }
+
+
     fun registerFcm(
         token: String,
         callback: CallbackListener<RegisterResult>) {

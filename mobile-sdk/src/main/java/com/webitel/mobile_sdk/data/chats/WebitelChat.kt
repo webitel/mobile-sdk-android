@@ -16,10 +16,10 @@ import com.webitel.mobile_sdk.domain.ChatClient
 import com.webitel.mobile_sdk.domain.Code
 import com.webitel.mobile_sdk.domain.Dialog
 import com.webitel.mobile_sdk.domain.Error
-import com.webitel.mobile_sdk.domain.Keyboard
 import com.webitel.mobile_sdk.domain.Member
 import com.webitel.mobile_sdk.domain.Message
 import com.webitel.mobile_sdk.domain.MessageCallbackListener
+import com.webitel.mobile_sdk.domain.ReplyMarkup
 import io.grpc.StatusRuntimeException
 import io.grpc.stub.StreamObserver
 import webitel.chat.History.ChatMessages
@@ -539,7 +539,7 @@ internal class WebitelChat(
                                 id = it.id,
                                 sentAt = it.date,
                                 postback = if (it.hasPostback()) toPostback(it.postback) else null,
-                                keyboard = if (it.hasKeyboard()) toKeyboard(it.keyboard) else null
+                                replyMarkup = if (it.hasKeyboard()) toKeyboard(it.keyboard) else null
                             )
                         )
                     } catch (_: Exception) {
@@ -575,9 +575,9 @@ internal class WebitelChat(
     }
 
 
-    private fun toKeyboard(value: MessageOuterClass.ReplyMarkup?): Keyboard? {
+    private fun toKeyboard(value: MessageOuterClass.ReplyMarkup?): ReplyMarkup? {
         if (value == null) return null
-        return Keyboard(value.noInput, toRows(value.buttonsList))
+        return ReplyMarkup(value.noInput, toRows(value.buttonsList))
     }
 
 
@@ -709,7 +709,7 @@ internal class WebitelChat(
             sentAt = message.date,
             id = message.id,
             postback = if (message.hasPostback()) toPostback(message.postback) else null,
-            keyboard = if (message.hasKeyboard()) toKeyboard(message.keyboard) else null
+            replyMarkup = if (message.hasKeyboard()) toKeyboard(message.keyboard) else null
         )
     }
 

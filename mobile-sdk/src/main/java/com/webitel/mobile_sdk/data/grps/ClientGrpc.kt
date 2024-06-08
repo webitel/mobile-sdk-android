@@ -148,6 +148,37 @@ internal class ClientGrpc(
     }
 
 
+    override fun setAccessTokenHeader(auth: String) {
+        make {
+            setAccessToken(auth)
+            updateConnect()
+        }
+    }
+
+
+    private fun updateConnect() {
+        if (requestObserver != null) {
+            try {
+                resetBackoff()
+                val stub = CustomerGrpc.newStub(channel.channel)
+                val m = CustomerOuterClass.InspectRequest
+                    .newBuilder()
+                    .build()
+
+                stub.inspect(m, object : StreamObserver<Auth.AccessToken> {
+                    override fun onNext(value: Auth.AccessToken?) {}
+                    override fun onError(t: Throwable) {
+                        logger.error("setAccessTokenHeader", "${t.message}")
+                    }
+                    override fun onCompleted() {}
+                })
+            } catch (e: Exception) {
+                logger.error("setAccessTokenHeader", "${e.message}")
+            }
+        }
+    }
+
+
     override fun registerFcm(token: String, callback: CallbackListener<RegisterResult>) {
         make {
             registerFcmUnaryRequest(token, callback)
