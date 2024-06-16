@@ -16,11 +16,17 @@ import com.webitel.mobile_sdk.domain.ChatClient
 import com.webitel.mobile_sdk.domain.Code
 import com.webitel.mobile_sdk.domain.Dialog
 import com.webitel.mobile_sdk.domain.Error
+import com.webitel.mobile_sdk.domain.InvalidStateException
 import com.webitel.mobile_sdk.domain.Member
 import com.webitel.mobile_sdk.domain.Message
 import com.webitel.mobile_sdk.domain.MessageCallbackListener
 import com.webitel.mobile_sdk.domain.ReplyMarkup
+import com.webitel.mobile_sdk.domain.TransferControl
+import com.webitel.mobile_sdk.domain.TransferListener
+import io.grpc.Status
 import io.grpc.StatusRuntimeException
+import io.grpc.stub.ClientCallStreamObserver
+import io.grpc.stub.ClientResponseObserver
 import io.grpc.stub.StreamObserver
 import webitel.chat.History.ChatMessages
 import webitel.chat.History.ChatMessagesRequest
@@ -36,6 +42,9 @@ import webitel.portal.Messages.UpdateNewMessage
 import java.util.UUID
 import java.util.concurrent.CountDownLatch
 
+
+const val pause_file_transfer = "pause_file_transfer"
+const val cancel_file_transfer = "cancel_file_transfer"
 
 internal class WebitelChat(
     private val chatApi: ChatApi,
@@ -163,30 +172,134 @@ internal class WebitelChat(
     override fun downloadFile(
         dialog: WebitelDialog,
         fileId: String,
-        observer: com.webitel.mobile_sdk.domain.StreamObserver
-    ) {
-        val request = Media.GetFileRequest
-            .newBuilder()
-            .setFileId(fileId)
-            .build()
+        offset: Long,
+        listener: TransferListener
+    ): TransferControl {
+        var total = offset
+        var isCompleted = false
+        var inProgress = true
+        var request: ClientCallStreamObserver<Media.GetFileRequest>? = null
 
-        val responseStreamObserver = object : StreamObserver<Media.MediaFile> {
+        val responseObserver = object : ClientResponseObserver<Media.GetFileRequest, Media.MediaFile> {
             override fun onNext(value: Media.MediaFile?) {
                 if (value != null) {
-                    observer.onNext(value.data.toByteArray())
+                    total += value.data.size()
+
+                    if (value.data.size() > 0) {
+                        listener.onData(value.data.toByteArray())
+
+                        logger.debug(
+                            "downloadFile",
+                            "chunkSize - ${value.data.size()}; total - $total"
+                        )
+                    }
                 }
             }
 
             override fun onError(t: Throwable) {
-                observer.onError(parseError(t))
+                request = null
+                inProgress = false
+                val err = parseError(t)
+
+                when (err.message) {
+                    pause_file_transfer -> {
+                        val pid = "DL/$fileId/$total"
+                        listener.onPaused(pid)
+                        logger.debug("downloadFile", "onPaused: pid - $pid")
+                    }
+                    cancel_file_transfer -> {
+                        isCompleted = true
+                        listener.onCanceled()
+                        logger.debug("downloadFile", "onCanceled: file download canceled")
+                    }
+                    else -> {
+                        listener.onError(err)
+                        logger.error("downloadFile", "onError: file download error - ${err.message}")
+                    }
+                }
             }
 
             override fun onCompleted() {
-                observer.onCompleted()
+                request = null
+                isCompleted = true
+                listener.onCompleted()
+                logger.debug("downloadFile", "onCompleted: file download complete")
+            }
+
+            override fun beforeStart(requestStream: ClientCallStreamObserver<Media.GetFileRequest>?) {
+                request = requestStream
             }
         }
 
-        chatApi.downloadFile(request, responseStreamObserver)
+        startDownload(fileId, total, responseObserver)
+
+        return object : TransferControl {
+            override val pid: String
+                get() = "DL/$fileId/$total"
+
+            override fun pause() {
+                if (isCompleted) {
+                    throw InvalidStateException(
+                        message = "File download completed or canceled",
+                    )
+                }
+
+                if (request == null) {
+                    logger.warn("downloadFile", "pause: file does not download")
+
+                } else {
+                    request?.cancel(
+                        pause_file_transfer,
+                        Status.CANCELLED.asException()
+                    )
+                }
+            }
+
+            override fun resume() {
+                if (isCompleted) {
+                    throw InvalidStateException(
+                        message = "File download completed or canceled",
+                    )
+
+                } else if (!inProgress) {
+                    inProgress = true
+                    startDownload(fileId, total, responseObserver)
+                }
+            }
+
+            override fun cancel() {
+                if (isCompleted) {
+                    throw InvalidStateException(
+                        message = "File download completed or canceled",
+                    )
+
+                } else {
+                    if (request == null) {
+                        isCompleted = true
+                        listener.onCanceled()
+                        logger.debug("downloadFile", "onCanceled: file download canceled")
+
+                    } else {
+                        request?.cancel(
+                            cancel_file_transfer,
+                            Status.CANCELLED.asException()
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+
+    private fun startDownload(fileId: String,
+                              offset: Long,
+                              streamObserver: ClientResponseObserver<Media.GetFileRequest, Media.MediaFile>) {
+        val request = Media.GetFileRequest.newBuilder()
+        if (offset > 0) {
+            request.setOffset(offset)
+        }
+        request.setFileId(fileId)
+        chatApi.downloadFile(request.build(), streamObserver)
     }
 
 

@@ -6,3 +6,7 @@ data class Error(
     val code: Code,
     val id: String = ""
 )
+
+
+class InvalidStateException(message: String) : Exception(message)
+class InvalidProcessIdException(message: String) : Exception(message)

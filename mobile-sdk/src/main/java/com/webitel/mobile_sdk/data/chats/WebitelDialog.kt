@@ -5,8 +5,10 @@ import com.webitel.mobile_sdk.domain.Message
 import com.webitel.mobile_sdk.domain.CallbackListener
 import com.webitel.mobile_sdk.domain.Dialog
 import com.webitel.mobile_sdk.domain.HistoryRequest
+import com.webitel.mobile_sdk.domain.InvalidProcessIdException
 import com.webitel.mobile_sdk.domain.MessageCallbackListener
-import com.webitel.mobile_sdk.domain.StreamObserver
+import com.webitel.mobile_sdk.domain.TransferControl
+import com.webitel.mobile_sdk.domain.TransferListener
 
 
 internal class WebitelDialog(
@@ -47,9 +49,35 @@ internal class WebitelDialog(
         apiDelegate.sendMessage(this, message, callback)
     }
 
-    override fun downloadFile(fileId: String, observer: StreamObserver) {
-        apiDelegate.downloadFile(this, fileId, observer)
+
+    override fun downloadFile(fileId: String, listener: TransferListener): TransferControl {
+        return apiDelegate.downloadFile(this, fileId, 0, listener)
     }
+
+
+    override fun downloadFile(
+        fileId: String,
+        offset: Long,
+        listener: TransferListener
+    ): TransferControl {
+        return apiDelegate.downloadFile(this, fileId, offset, listener)
+    }
+
+
+    override fun downloadFile(listener: TransferListener, pid: String): TransferControl {
+        val process = pid.split('/')
+        val fileId = process.getOrNull(1)
+        val offset = process.getOrNull(2)?.toLongOrNull()
+
+        if (fileId.isNullOrEmpty() || offset == null) {
+            throw InvalidProcessIdException(
+                message = "pid is invalid.",
+            )
+        }
+
+        return apiDelegate.downloadFile(this, fileId, offset,  listener)
+    }
+
 
     override fun sendPostback(
         mid: Long,

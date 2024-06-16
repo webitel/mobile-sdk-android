@@ -24,6 +24,7 @@ import io.grpc.ConnectivityState
 import io.grpc.Metadata
 import io.grpc.Status
 import io.grpc.StatusRuntimeException
+import io.grpc.stub.ClientResponseObserver
 import io.grpc.stub.StreamObserver
 import webitel.chat.MessageOuterClass
 import webitel.portal.Account.Identity
@@ -407,8 +408,8 @@ internal class ClientGrpc(
 
     override fun downloadFile(
         request: Media.GetFileRequest,
-        streamObserver: StreamObserver<Media.MediaFile>
-    ){
+        streamObserver: ClientResponseObserver<Media.GetFileRequest, Media.MediaFile>
+    ) {
         val stub = MediaStorageGrpc.newStub(channel.channel)
         stub.getFile(request, streamObserver)
     }

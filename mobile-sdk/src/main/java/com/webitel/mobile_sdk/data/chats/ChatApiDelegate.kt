@@ -3,7 +3,8 @@ package com.webitel.mobile_sdk.data.chats
 import com.webitel.mobile_sdk.domain.Message
 import com.webitel.mobile_sdk.domain.CallbackListener
 import com.webitel.mobile_sdk.domain.MessageCallbackListener
-import com.webitel.mobile_sdk.domain.StreamObserver
+import com.webitel.mobile_sdk.domain.TransferControl
+import com.webitel.mobile_sdk.domain.TransferListener
 
 
 internal interface ChatApiDelegate {
@@ -34,8 +35,9 @@ internal interface ChatApiDelegate {
     fun downloadFile(
         dialog: WebitelDialog,
         fileId: String,
-        observer: StreamObserver
-    )
+        offset: Long,
+        listener: TransferListener
+    ): TransferControl
 
 
     fun sendPostback(

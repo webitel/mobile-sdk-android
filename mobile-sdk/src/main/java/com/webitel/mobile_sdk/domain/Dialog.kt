@@ -1,7 +1,5 @@
 package com.webitel.mobile_sdk.domain
 
-import java.util.UUID
-
 
 interface Dialog {
     val id: String
@@ -15,7 +13,48 @@ interface Dialog {
 
     fun sendMessage(message: Message.options, callback: MessageCallbackListener)
 
-    fun downloadFile(fileId: String, observer: StreamObserver)
+
+    /**
+     * @param fileId File ID; Message.file,id.
+     * @param listener listener for media downloading progress reporting.
+     *
+     * @return Transfer control: .pause()/.resume()/.cancel()
+     */
+    fun downloadFile(fileId: String, listener: TransferListener): TransferControl
+
+    /**
+     * @param fileId File ID; Message.file,id.
+     * @param offset Range: bytes=<start>.
+     * @param listener listener for media downloading progress reporting.
+     *
+     * @return Transfer control: .pause()/.resume()/.cancel()
+     */
+    fun downloadFile(fileId: String, offset: Long, listener: TransferListener): TransferControl
+
+    /**
+     * @param listener listener for media downloading progress reporting.
+     * @param pid process ID. TransferListener.onPaused(pid)
+     *
+     * @return Transfer control: .pause()/.resume()/.cancel()
+     *
+     * @throws InvalidProcessIdException if process ID (pid) is invalid.
+     */
+    @Throws(InvalidProcessIdException::class)
+    fun downloadFile(listener: TransferListener, pid: String): TransferControl
+
+
+//    /**
+//     * @param request request to send a file.
+//     * @param callback receive result  from server onSent(Message)/onError.
+//     */
+//    fun sendFile(request: FileTransferRequest, callback: MessageCallbackListener)
+//
+//
+//    /**
+//     * @param pid process ID. TransferListener.onPaused(pid)
+//     * @param callback receive result  from server onSent(Message)/onError.
+//     */
+//    fun sendFile(pid: String, callback: MessageCallbackListener)
 
 
     /**
