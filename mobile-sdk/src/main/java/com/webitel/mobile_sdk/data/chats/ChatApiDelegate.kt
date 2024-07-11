@@ -2,9 +2,11 @@ package com.webitel.mobile_sdk.data.chats
 
 import com.webitel.mobile_sdk.domain.Message
 import com.webitel.mobile_sdk.domain.CallbackListener
+import com.webitel.mobile_sdk.domain.CancellationToken
+import com.webitel.mobile_sdk.domain.DownloadListener
+import com.webitel.mobile_sdk.domain.FileTransferRequest
 import com.webitel.mobile_sdk.domain.MessageCallbackListener
-import com.webitel.mobile_sdk.domain.TransferControl
-import com.webitel.mobile_sdk.domain.TransferListener
+import com.webitel.mobile_sdk.domain.StreamObserver
 
 
 internal interface ChatApiDelegate {
@@ -36,8 +38,15 @@ internal interface ChatApiDelegate {
         dialog: WebitelDialog,
         fileId: String,
         offset: Long,
-        listener: TransferListener
-    ): TransferControl
+        listener: DownloadListener
+    ): CancellationToken
+
+
+    fun downloadFile(
+        dialog: WebitelDialog,
+        fileId: String,
+        observer: StreamObserver
+    )
 
 
     fun sendPostback(
@@ -48,4 +57,11 @@ internal interface ChatApiDelegate {
         sendId: String? = null,
         callback: MessageCallbackListener
     )
+
+
+    fun sendFile(
+        dialog: WebitelDialog,
+        transferRequest: FileTransferRequest,
+        callback: MessageCallbackListener
+    ): CancellationToken
 }

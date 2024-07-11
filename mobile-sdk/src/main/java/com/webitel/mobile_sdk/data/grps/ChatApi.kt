@@ -19,8 +19,19 @@ internal interface ChatApi: BaseApi {
     ): StreamObserver<Media.UploadMedia>
 
 
+    fun uploadFile(
+        responseObserver: ClientResponseObserver<Media.UploadRequest, Media.UploadProgress>,
+    ): StreamObserver<Media.UploadRequest>
+
+
     fun downloadFile(
         request: Media.GetFileRequest,
         streamObserver: ClientResponseObserver<Media.GetFileRequest, Media.MediaFile>
+    )
+
+
+    fun downloadFile(
+        request: Media.GetFileRequest,
+        streamObserver: StreamObserver<Media.MediaFile>
     )
 }

@@ -12,17 +12,19 @@ import com.webitel.mobile_sdk.data.portal.WLogger
 import com.webitel.mobile_sdk.domain.Button
 import com.webitel.mobile_sdk.domain.ButtonRow
 import com.webitel.mobile_sdk.domain.CallbackListener
+import com.webitel.mobile_sdk.domain.CancellationToken
 import com.webitel.mobile_sdk.domain.ChatClient
 import com.webitel.mobile_sdk.domain.Code
 import com.webitel.mobile_sdk.domain.Dialog
+import com.webitel.mobile_sdk.domain.DownloadListener
 import com.webitel.mobile_sdk.domain.Error
+import com.webitel.mobile_sdk.domain.FileTransferRequest
 import com.webitel.mobile_sdk.domain.InvalidStateException
 import com.webitel.mobile_sdk.domain.Member
 import com.webitel.mobile_sdk.domain.Message
 import com.webitel.mobile_sdk.domain.MessageCallbackListener
 import com.webitel.mobile_sdk.domain.ReplyMarkup
-import com.webitel.mobile_sdk.domain.TransferControl
-import com.webitel.mobile_sdk.domain.TransferListener
+import com.webitel.mobile_sdk.domain.UploadListener
 import io.grpc.Status
 import io.grpc.StatusRuntimeException
 import io.grpc.stub.ClientCallStreamObserver
@@ -169,28 +171,252 @@ internal class WebitelChat(
     }
 
 
+    override fun sendFile(
+        dialog: WebitelDialog,
+        transferRequest: FileTransferRequest,
+        callback: MessageCallbackListener
+    ): CancellationToken {
+        var inProcess = true
+        var isCompleted = false
+        var request: ClientCallStreamObserver<Media.UploadRequest>? = null
+        var processId = ""
+        val sendId = transferRequest.sendId ?: UUID.randomUUID().toString()
+
+        val responseObserver = object : ClientResponseObserver<Media.UploadRequest, Media.UploadProgress> {
+            override fun onNext(value: Media.UploadProgress?) {
+                if (value == null) return
+
+                if (value.hasStat()) {
+                    logger.debug("sendFile", "File was uploaded; start send message")
+                    val peer = PeerOuterClass.Peer.newBuilder()
+                        .setId(dialog.id)
+                        .setType(dialog.type)
+                        .build()
+                    val messageRequest = Messages.SendMessageRequest
+                        .newBuilder()
+                        .setPeer(peer)
+                        .setFile(value.stat.file)
+
+                    sendMessage(sendId, messageRequest.build(), callback)
+
+                } else {
+                    if (value.part.pid.isNotEmpty()) {
+                        transferRequest.listener?.onStarted(value.part.pid)
+                        processId = value.part.pid
+
+                        if (value.part.size > 0) {
+                            transferRequest.stream.skip(value.part.size)
+                        }
+
+                        val thread = Thread {
+                            var length: Int
+                            val fiveKB = ByteArray(5120)
+                            while (transferRequest.stream.read(fiveKB).also { length = it } > 0) {
+                                if (!inProcess) break
+                                logger.debug("sendFile", "sending $length length of data")
+                                request?.onNext(
+                                    Media.UploadRequest.newBuilder()
+                                        .setPart(ByteString.copyFrom(fiveKB, 0, length))
+                                        .build()
+                                )
+                            }
+                            logger.debug("sendFile", "all bytes sent to stream")
+                            if (inProcess) {
+                                request?.onCompleted()
+                            }
+                        }
+                        thread.start()
+                    }
+
+                    if (value.part.size > 0) {
+                        logger.debug("sendFile", "progress - ${value.part.size}")
+                        transferRequest.listener?.onProgress(value.part.size)
+                    }
+                }
+            }
+
+            override fun onError(t: Throwable) {
+                inProcess = false
+                request = null
+                val err = parseError(t)
+
+                when (err.message) {
+                    cancel_file_transfer -> {
+                        transferRequest.listener?.onCanceled()
+                        logger.debug("sendFile", "File upload canceled")
+                    }
+                    else -> {
+                        transferRequest.listener?.onError(err)
+                        callback.onError(err)
+                        logger.error("sendFile", "File upload error - ${err.message}")
+                    }
+                }
+            }
+
+            override fun onCompleted() {
+                isCompleted = true
+                request = null
+            }
+
+            override fun beforeStart(requestStream: ClientCallStreamObserver<Media.UploadRequest>?) {
+                request = requestStream
+            }
+        }
+
+        startUpload(transferRequest, responseObserver)
+
+        return object : CancellationToken {
+            override fun cancel(cleanUp: Boolean) {
+                inProcess = false
+                if (isCompleted) {
+                    throw InvalidStateException(
+                        message = "File upload completed or canceled",
+                    )
+                }
+                if (cleanUp) {
+                    isCompleted = true
+                    val listener =
+                        if (request == null) transferRequest.listener
+                        else null
+
+                    request?.cancel(
+                        cancel_file_transfer,
+                        Status.CANCELLED.asException()
+                    )
+
+                    killUpload(processId, listener)
+                } else {
+                    this.cancel()
+                }
+            }
+
+            override fun cancel() {
+                inProcess = false
+                if (isCompleted || request == null) {
+                    throw InvalidStateException(
+                        message = "File upload completed or canceled",
+                    )
+
+                } else {
+                    request?.cancel(
+                        cancel_file_transfer,
+                        Status.CANCELLED.asException()
+                    )
+                }
+            }
+        }
+    }
+
+
+    private fun killUpload(pid: String, listener: UploadListener?) {
+        var stream: ClientCallStreamObserver<Media.UploadRequest>? = null
+        val responseObserver = object : ClientResponseObserver<Media.UploadRequest, Media.UploadProgress> {
+            override fun onNext(value: Media.UploadProgress?) {
+                if (!value?.part?.pid.isNullOrEmpty()) {
+                    stream?.onNext(
+                        Media.UploadRequest.newBuilder()
+                                .setKill(Media.UploadRequest.Abort.newBuilder().build())
+                                .build()
+                    )
+                }
+            }
+
+            override fun onError(t: Throwable) {
+                val err = parseError(t)
+                logger.error("sendFile", "Kill upload error - ${err}")
+            }
+
+            override fun onCompleted() {
+                listener?.onCanceled()
+                logger.debug("sendFile", "Data on the server is cleared")
+            }
+
+            override fun beforeStart(requestStream: ClientCallStreamObserver<Media.UploadRequest>?) {
+                stream = requestStream
+            }
+        }
+
+        val req = Media.UploadRequest.newBuilder()
+        req.setPid(pid)
+
+        val st = chatApi.uploadFile(responseObserver)
+        st.onNext(req.build())
+    }
+
+
+    private fun startUpload(transferRequest: FileTransferRequest,
+                            responseObserver: ClientResponseObserver<Media.UploadRequest, Media.UploadProgress>) {
+        val req = Media.UploadRequest.newBuilder()
+        if (transferRequest.pid == null) {
+            req.setNew(
+                Media.UploadRequest.Start.newBuilder()
+                    .setFile(
+                        Media.InputFile.newBuilder()
+                            .setName(transferRequest.fileName)
+                            .setType(transferRequest.mimeType)
+                            .build()
+                    )
+                    .setProgress(true)
+                    .build()
+            )
+
+        } else {
+            req.setPid(transferRequest.pid)
+        }
+
+        val st = chatApi.uploadFile(responseObserver)
+        st.onNext(req.build())
+    }
+
+
+    override fun downloadFile(
+        dialog: WebitelDialog,
+        fileId: String,
+        observer: com.webitel.mobile_sdk.domain.StreamObserver
+    ) {
+        val request = Media.GetFileRequest
+            .newBuilder()
+            .setFileId(fileId)
+            .build()
+
+        val responseStreamObserver = object : StreamObserver<Media.MediaFile> {
+            override fun onNext(value: Media.MediaFile?) {
+                if (value != null) {
+                    observer.onNext(value.data.toByteArray())
+                }
+            }
+
+            override fun onError(t: Throwable) {
+                observer.onError(parseError(t))
+            }
+
+            override fun onCompleted() {
+                observer.onCompleted()
+            }
+        }
+
+        chatApi.downloadFile(request, responseStreamObserver)
+    }
+
+
     override fun downloadFile(
         dialog: WebitelDialog,
         fileId: String,
         offset: Long,
-        listener: TransferListener
-    ): TransferControl {
-        var total = offset
+        listener: DownloadListener
+    ): CancellationToken {
         var isCompleted = false
-        var inProgress = true
         var request: ClientCallStreamObserver<Media.GetFileRequest>? = null
 
         val responseObserver = object : ClientResponseObserver<Media.GetFileRequest, Media.MediaFile> {
             override fun onNext(value: Media.MediaFile?) {
                 if (value != null) {
-                    total += value.data.size()
-
                     if (value.data.size() > 0) {
                         listener.onData(value.data.toByteArray())
 
                         logger.debug(
                             "downloadFile",
-                            "chunkSize - ${value.data.size()}; total - $total"
+                            "chunkSize - ${value.data.size()}"
                         )
                     }
                 }
@@ -198,23 +424,16 @@ internal class WebitelChat(
 
             override fun onError(t: Throwable) {
                 request = null
-                inProgress = false
                 val err = parseError(t)
 
                 when (err.message) {
-                    pause_file_transfer -> {
-                        val pid = "DL/$fileId/$total"
-                        listener.onPaused(pid)
-                        logger.debug("downloadFile", "onPaused: pid - $pid")
-                    }
                     cancel_file_transfer -> {
-                        isCompleted = true
                         listener.onCanceled()
-                        logger.debug("downloadFile", "onCanceled: file download canceled")
+                        logger.debug("downloadFile", "File download canceled")
                     }
                     else -> {
                         listener.onError(err)
-                        logger.error("downloadFile", "onError: file download error - ${err.message}")
+                        logger.error("downloadFile", "File download error - ${err.message}")
                     }
                 }
             }
@@ -223,7 +442,7 @@ internal class WebitelChat(
                 request = null
                 isCompleted = true
                 listener.onCompleted()
-                logger.debug("downloadFile", "onCompleted: file download complete")
+                logger.debug("downloadFile", "File download complete")
             }
 
             override fun beforeStart(requestStream: ClientCallStreamObserver<Media.GetFileRequest>?) {
@@ -231,43 +450,10 @@ internal class WebitelChat(
             }
         }
 
-        startDownload(fileId, total, responseObserver)
+        startDownload(fileId, offset, responseObserver)
 
-        return object : TransferControl {
-            override val pid: String
-                get() = "DL/$fileId/$total"
-
-            override fun pause() {
-                if (isCompleted) {
-                    throw InvalidStateException(
-                        message = "File download completed or canceled",
-                    )
-                }
-
-                if (request == null) {
-                    logger.warn("downloadFile", "pause: file does not download")
-
-                } else {
-                    request?.cancel(
-                        pause_file_transfer,
-                        Status.CANCELLED.asException()
-                    )
-                }
-            }
-
-            override fun resume() {
-                if (isCompleted) {
-                    throw InvalidStateException(
-                        message = "File download completed or canceled",
-                    )
-
-                } else if (!inProgress) {
-                    inProgress = true
-                    startDownload(fileId, total, responseObserver)
-                }
-            }
-
-            override fun cancel() {
+        return object : CancellationToken {
+            override fun cancel(cleanUp: Boolean) {
                 if (isCompleted) {
                     throw InvalidStateException(
                         message = "File download completed or canceled",
@@ -275,9 +461,8 @@ internal class WebitelChat(
 
                 } else {
                     if (request == null) {
-                        isCompleted = true
                         listener.onCanceled()
-                        logger.debug("downloadFile", "onCanceled: file download canceled")
+                        logger.debug("downloadFile", "File download canceled")
 
                     } else {
                         request?.cancel(
@@ -286,6 +471,10 @@ internal class WebitelChat(
                         )
                     }
                 }
+            }
+
+            override fun cancel() {
+                this.cancel(false)
             }
         }
     }

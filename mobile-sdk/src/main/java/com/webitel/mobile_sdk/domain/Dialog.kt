@@ -14,47 +14,36 @@ interface Dialog {
     fun sendMessage(message: Message.options, callback: MessageCallbackListener)
 
 
+    @Deprecated(message = "Use 'downloadFile(fileId: String, listener: DownloadListener): CancellationToken' instead")
+    fun downloadFile(fileId: String, observer: StreamObserver)
+
+
     /**
      * @param fileId File ID; Message.file,id.
      * @param listener listener for media downloading progress reporting.
      *
-     * @return Transfer control: .pause()/.resume()/.cancel()
+     * @return A CancellationToken that can be used to cancel the download operation.
      */
-    fun downloadFile(fileId: String, listener: TransferListener): TransferControl
+    fun downloadFile(fileId: String, listener: DownloadListener): CancellationToken
+
 
     /**
      * @param fileId File ID; Message.file,id.
      * @param offset Range: bytes=<start>.
      * @param listener listener for media downloading progress reporting.
      *
-     * @return Transfer control: .pause()/.resume()/.cancel()
+     * @return A CancellationToken that can be used to cancel the download operation.
      */
-    fun downloadFile(fileId: String, offset: Long, listener: TransferListener): TransferControl
+    fun downloadFile(fileId: String, offset: Long, listener: DownloadListener): CancellationToken
+
 
     /**
-     * @param listener listener for media downloading progress reporting.
-     * @param pid process ID. TransferListener.onPaused(pid)
+     * @param request request to send a file.
+     * @param callback receive result  from server onSent(Message)/onError.
      *
-     * @return Transfer control: .pause()/.resume()/.cancel()
-     *
-     * @throws InvalidProcessIdException if process ID (pid) is invalid.
+     * * @return Transfer control: .pause()/.resume()/.cancel()
      */
-    @Throws(InvalidProcessIdException::class)
-    fun downloadFile(listener: TransferListener, pid: String): TransferControl
-
-
-//    /**
-//     * @param request request to send a file.
-//     * @param callback receive result  from server onSent(Message)/onError.
-//     */
-//    fun sendFile(request: FileTransferRequest, callback: MessageCallbackListener)
-//
-//
-//    /**
-//     * @param pid process ID. TransferListener.onPaused(pid)
-//     * @param callback receive result  from server onSent(Message)/onError.
-//     */
-//    fun sendFile(pid: String, callback: MessageCallbackListener)
+    fun sendFile(request: FileTransferRequest, callback: MessageCallbackListener): CancellationToken
 
 
     /**
@@ -71,6 +60,7 @@ interface Dialog {
         sendId: String? = null,
         callback: MessageCallbackListener
     )
+
 
     fun addListener(listener: DialogListener)
     fun removeListener(listener: DialogListener)

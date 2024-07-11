@@ -3,12 +3,13 @@ package com.webitel.mobile_sdk.data.chats
 import com.webitel.mobile_sdk.domain.DialogListener
 import com.webitel.mobile_sdk.domain.Message
 import com.webitel.mobile_sdk.domain.CallbackListener
+import com.webitel.mobile_sdk.domain.CancellationToken
 import com.webitel.mobile_sdk.domain.Dialog
+import com.webitel.mobile_sdk.domain.DownloadListener
+import com.webitel.mobile_sdk.domain.FileTransferRequest
 import com.webitel.mobile_sdk.domain.HistoryRequest
-import com.webitel.mobile_sdk.domain.InvalidProcessIdException
 import com.webitel.mobile_sdk.domain.MessageCallbackListener
-import com.webitel.mobile_sdk.domain.TransferControl
-import com.webitel.mobile_sdk.domain.TransferListener
+import com.webitel.mobile_sdk.domain.StreamObserver
 
 
 internal class WebitelDialog(
@@ -50,7 +51,13 @@ internal class WebitelDialog(
     }
 
 
-    override fun downloadFile(fileId: String, listener: TransferListener): TransferControl {
+    @Deprecated("Use 'downloadFile(fileId: String, listener: DownloadListener): CancellationToken' instead")
+    override fun downloadFile(fileId: String, observer: StreamObserver) {
+        apiDelegate.downloadFile(this, fileId, observer)
+    }
+
+
+    override fun downloadFile(fileId: String, listener: DownloadListener): CancellationToken {
         return apiDelegate.downloadFile(this, fileId, 0, listener)
     }
 
@@ -58,24 +65,17 @@ internal class WebitelDialog(
     override fun downloadFile(
         fileId: String,
         offset: Long,
-        listener: TransferListener
-    ): TransferControl {
+        listener: DownloadListener
+    ): CancellationToken {
         return apiDelegate.downloadFile(this, fileId, offset, listener)
     }
 
 
-    override fun downloadFile(listener: TransferListener, pid: String): TransferControl {
-        val process = pid.split('/')
-        val fileId = process.getOrNull(1)
-        val offset = process.getOrNull(2)?.toLongOrNull()
-
-        if (fileId.isNullOrEmpty() || offset == null) {
-            throw InvalidProcessIdException(
-                message = "pid is invalid.",
-            )
-        }
-
-        return apiDelegate.downloadFile(this, fileId, offset,  listener)
+    override fun sendFile(
+        request: FileTransferRequest,
+        callback: MessageCallbackListener
+    ): CancellationToken {
+        return apiDelegate.sendFile(this, request, callback)
     }
 
 

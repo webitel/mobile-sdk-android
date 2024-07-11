@@ -406,6 +406,23 @@ internal class ClientGrpc(
     }
 
 
+    override fun uploadFile(
+        responseObserver: ClientResponseObserver<Media.UploadRequest, Media.UploadProgress>
+    ): StreamObserver<Media.UploadRequest> {
+        val stub = MediaStorageGrpc.newStub(channel.channel)
+        return stub.upload(responseObserver)
+    }
+
+
+    override fun downloadFile(
+        request: Media.GetFileRequest,
+        streamObserver: StreamObserver<Media.MediaFile>
+    ){
+        val stub = MediaStorageGrpc.newStub(channel.channel)
+        stub.getFile(request, streamObserver)
+    }
+
+
     override fun downloadFile(
         request: Media.GetFileRequest,
         streamObserver: ClientResponseObserver<Media.GetFileRequest, Media.MediaFile>

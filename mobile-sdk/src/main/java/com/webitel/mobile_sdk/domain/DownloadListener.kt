@@ -1,19 +1,11 @@
 package com.webitel.mobile_sdk.domain
 
-interface TransferListener {
-
+interface DownloadListener {
     /**
      * Called when data is transferred
      *
      */
     fun onData(value: ByteArray)
-
-    /**
-     * Called when transfer is paused
-     *
-     * @param pid process ID.
-     */
-    fun onPaused(pid: String)
 
     /**
      * Called when transfer is complete
