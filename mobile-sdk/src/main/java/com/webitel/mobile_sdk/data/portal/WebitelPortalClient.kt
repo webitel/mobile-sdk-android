@@ -39,7 +39,10 @@ internal class WebitelPortalClient(
     private val voice: VoiceClient
 
     private var userSession: UserSession? = null
-    private val logger: WLogger
+
+    companion object {
+        val logger: WLogger = WLogger()
+    }
 
 
     init {
@@ -47,7 +50,7 @@ internal class WebitelPortalClient(
             userSession
         }
 
-        logger = WLogger(client.logLevel)
+        logger.level = client.logLevel
 
         grpc = ClientGrpc(
             getChannelConfig(),
@@ -163,7 +166,12 @@ internal class WebitelPortalClient(
 
 
     override fun setAccessTokenHeader(token: String) {
-        authRepository.setAccessTokenHeader(token)
+        authRepository.setAccessTokenHeader(token, null)
+    }
+
+
+    override fun setAccessTokenHeader(token: String, callback: CallbackListener<Unit>) {
+        authRepository.setAccessTokenHeader(token, callback)
     }
 
 

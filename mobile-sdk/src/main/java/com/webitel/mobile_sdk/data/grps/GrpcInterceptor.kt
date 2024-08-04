@@ -1,5 +1,6 @@
 package com.webitel.mobile_sdk.data.grps
 
+import com.webitel.mobile_sdk.data.portal.WebitelPortalClient
 import io.grpc.CallOptions
 import io.grpc.Channel
 import io.grpc.ClientCall
@@ -32,11 +33,23 @@ internal class GrpcInterceptor(
         return object : ForwardingClientCall.SimpleForwardingClientCall<ReqT, RespT>(next.newCall(method, callOptions)) {
             override fun sendMessage(message: ReqT) {
                 super.sendMessage(message)
+                WebitelPortalClient.logger.debug(
+                    "intercept",
+                    "Method: ${method?.bareMethodName ?: "undefined bareMethodName"}, Message: ${message.toString()}"
+                )
             }
+
+
 
             override fun start(responseListener: Listener<RespT>?, headers: Metadata?) {
                 setupHeaders(headers, method?.bareMethodName ?: "undefined bareMethodName")
                 listener?.onStart(method?.bareMethodName.toString())
+
+                WebitelPortalClient.logger.debug(
+                    "connect.start",
+                    "${method?.bareMethodName.toString()} - ${headers.toString()}"
+                )
+
                 super.start(object : ForwardingClientCallListener.SimpleForwardingClientCallListener<RespT>(responseListener) {
                     override fun onMessage(message: RespT) {
                         super.onMessage(message)
@@ -48,8 +61,8 @@ internal class GrpcInterceptor(
                     }
 
                     override fun onClose(status: Status?, trailers: Metadata?) {
-                        listener?.onClose(method?.bareMethodName.toString(), status, trailers)
                         super.onClose(status, trailers)
+                        listener?.onClose(method?.bareMethodName.toString(), status, trailers)
                     }
                 }, headers)
             }

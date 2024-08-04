@@ -3,8 +3,8 @@ package com.webitel.mobile_sdk.data.portal
 import android.util.Log
 import com.webitel.mobile_sdk.domain.LogLevel
 
-internal class WLogger(private val level: LogLevel) {
-
+internal class WLogger {
+    var level: LogLevel = LogLevel.ERROR
     fun info(tag: String, message: String) {
         if (level <= LogLevel.INFO) {
             Log.i(tag, message)

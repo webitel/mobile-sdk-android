@@ -30,11 +30,11 @@ import webitel.chat.MessageOuterClass
 import webitel.portal.Account.Identity
 import webitel.portal.Auth
 import webitel.portal.Auth.TokenRequest
-import webitel.portal.Connect
 import webitel.portal.Connect.Echo
 import webitel.portal.Connect.Request
 import webitel.portal.Connect.Response
 import webitel.portal.Connect.Update
+import webitel.portal.Connect.UpdateDisconnect
 import webitel.portal.CustomerGrpc
 import webitel.portal.CustomerOuterClass
 import webitel.portal.CustomerOuterClass.RegisterDeviceResponse
@@ -68,7 +68,7 @@ internal class ClientGrpc(
         Handler(thread.looper)
     }
 
-    private var connectState = ConnectState.DISCONNECTED
+    private var connectState: ConnectState = ConnectState.None
 
 
     init {
@@ -149,32 +149,42 @@ internal class ClientGrpc(
     }
 
 
-    override fun setAccessTokenHeader(auth: String) {
+    override fun setAccessTokenHeader(auth: String, callback: CallbackListener<Unit>?) {
         make {
             setAccessToken(auth)
-            updateConnect()
-        }
-    }
+            if (requestObserver != null) {
+                try {
+                    resetBackoff()
+                    val stub = CustomerGrpc.newStub(channel.channel)
+                    val m = CustomerOuterClass.InspectRequest
+                        .newBuilder()
+                        .build()
 
-
-    private fun updateConnect() {
-        if (requestObserver != null) {
-            try {
-                resetBackoff()
-                val stub = CustomerGrpc.newStub(channel.channel)
-                val m = CustomerOuterClass.InspectRequest
-                    .newBuilder()
-                    .build()
-
-                stub.inspect(m, object : StreamObserver<Auth.AccessToken> {
-                    override fun onNext(value: Auth.AccessToken?) {}
-                    override fun onError(t: Throwable) {
-                        logger.error("setAccessTokenHeader", "${t.message}")
+                    stub.inspect(m, object : StreamObserver<Auth.AccessToken> {
+                        override fun onNext(value: Auth.AccessToken?) {
+                            logger.debug("token", "token updated in headers and stream")
+                            callback?.onSuccess(Unit)
+                        }
+                        override fun onError(t: Throwable) {
+                            logger.error("token", "token not updated in stream. ${t.message}")
+                            callback?.let {
+                                val err = parseError(t)
+                                it.onError(err)
+                            }
+                        }
+                        override fun onCompleted() {}
+                    })
+                } catch (e: Exception) {
+                    logger.error("token", "token not updated in stream. ${e.message}")
+                    callback?.let {
+                        val err = parseError(e)
+                        it.onError(err)
                     }
-                    override fun onCompleted() {}
-                })
-            } catch (e: Exception) {
-                logger.error("setAccessTokenHeader", "${e.message}")
+                }
+
+            }else {
+                logger.debug("token", "token updated in headers")
+                callback?.onSuccess(Unit)
             }
         }
     }
@@ -257,8 +267,8 @@ internal class ClientGrpc(
                     .newBuilder()
                     .build()
 
-                stub.logout(m, object : StreamObserver<Connect.UpdateSignedOut> {
-                    override fun onNext(value: Connect.UpdateSignedOut?) {
+                stub.logout(m, object : StreamObserver<UpdateDisconnect> {
+                    override fun onNext(value: UpdateDisconnect?) {
                         callback.onSuccess(Unit)
                     }
 
@@ -490,18 +500,11 @@ internal class ClientGrpc(
     }
 
 
-    @Synchronized
     private fun stopStream() {
-        make {
-            val s = requestObserver
-            requestObserver = null
-            try {
-                s?.onCompleted()
-            } catch (_: Exception) {
-            }
-            timer?.cancel()
-            timer = null
-        }
+        requestObserver?.onCompleted()
+        requestObserver = null
+        timer?.cancel()
+        timer = null
     }
 
 
@@ -658,6 +661,7 @@ internal class ClientGrpc(
     private fun openBiDirectionalConnect() {
         try {
             resetBackoff()
+            logger.debug("connect", "create new connection...")
             val stub = CustomerGrpc.newStub(channel.channel)
             requestObserver?.onCompleted()
             requestObserver = stub.connect(object : StreamObserver<Update> {
@@ -719,6 +723,10 @@ internal class ClientGrpc(
             message?.let {
                 chatListener?.onNewMessage(it)
             }
+
+        } else if (update.data.`is`(UpdateDisconnect::class.java)) {
+            logger.debug("UpdateDisconnect", "Server closes connection...")
+
         } else {
             logger.debug("notImplementedEvent", update.toString())
         }
@@ -778,26 +786,31 @@ internal class ClientGrpc(
 
     override fun onStart(methodName: String) {
         if (methodName != CustomerGrpc.getConnectMethod().bareMethodName) return
-        logger.debug("onStateChanged", "from = $connectState, to = ${ConnectState.CONNECTING}")
-        connectionListeners.onStateChanged(from = connectState, to = ConnectState.CONNECTING)
-        connectState = ConnectState.CONNECTING
+        logger.debug("onStateChanged", "from = $connectState, to = ${ConnectState.Connecting}")
+        connectionListeners.onStateChanged(from = connectState, to = ConnectState.Connecting)
+        connectState = ConnectState.Connecting
     }
 
 
     override fun onReady(methodName: String) {
         if (methodName != CustomerGrpc.getConnectMethod().bareMethodName) return
-        logger.debug("onStateChanged", "from = $connectState, to = ${ConnectState.READY}")
-        connectionListeners.onStateChanged(from = connectState, to = ConnectState.READY)
-        connectState = ConnectState.READY
+        logger.debug("onStateChanged", "from = $connectState, to = ${ConnectState.Ready}")
+        connectionListeners.onStateChanged(from = connectState, to = ConnectState.Ready)
+        connectState = ConnectState.Ready
     }
 
 
     override fun onClose(methodName: String, status: Status?, trailers: Metadata?) {
         if (methodName != CustomerGrpc.getConnectMethod().bareMethodName) return
-        ConnectState.DISCONNECTED.message = status.toString()
-        logger.debug("onStateChanged", "from = $connectState, to = ${ConnectState.DISCONNECTED}")
-        connectionListeners.onStateChanged(from = connectState, to = ConnectState.DISCONNECTED)
-        connectState = ConnectState.DISCONNECTED
+        val statusCode = Code.forNumber(status?.code?.value() ?: 2)
+        val reason = Error(
+            message = status?.description ?: status.toString(),
+            code = statusCode
+        )
+        val state = ConnectState.Disconnected(reason)
+        logger.debug("onStateChanged", "from = ${connectState}, to = $state")
+        connectionListeners.onStateChanged(from = connectState, to = state)
+        connectState = state
     }
 }
 

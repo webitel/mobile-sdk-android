@@ -27,6 +27,19 @@ interface PortalClient {
     fun  setAccessTokenHeader(token: String)
 
     /**
+     * Sets the access token.
+     *
+     * This function stores the provided access token and calls the callback upon completion of the operation.
+     *
+     * @param token The access token to be set.
+     * @param callback called when the operation is finished, where:
+     *
+     * `.onSuccess`: If the token was successfully set.
+     * `.onError`: If an error occurred while setting the token, along with an `Error` object describing the error.
+     */
+    fun  setAccessTokenHeader(token: String, callback: CallbackListener<Unit>)
+
+    /**
      * Register device PUSH subscription
      * */
     fun registerDevice(pushToken: String, callback: CallbackListener<RegisterResult>)

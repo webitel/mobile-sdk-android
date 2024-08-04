@@ -119,8 +119,8 @@ internal class AuthRepository(
     }
 
 
-    fun setAccessTokenHeader(token: String) {
-        authApi.setAccessTokenHeader(token)
+    fun setAccessTokenHeader(token: String, callback: CallbackListener<Unit>?) {
+        authApi.setAccessTokenHeader(token, callback)
     }
 
 

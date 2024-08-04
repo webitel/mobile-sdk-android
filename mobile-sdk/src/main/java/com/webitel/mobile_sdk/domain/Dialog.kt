@@ -41,7 +41,7 @@ interface Dialog {
      * @param request request to send a file.
      * @param callback receive result  from server onSent(Message)/onError.
      *
-     * * @return Transfer control: .pause()/.resume()/.cancel()
+     * @return A CancellationToken that can be used to cancel the sending operation.
      */
     fun sendFile(request: FileTransferRequest, callback: MessageCallbackListener): CancellationToken
 
