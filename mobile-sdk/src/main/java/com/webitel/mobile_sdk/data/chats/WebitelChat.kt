@@ -216,11 +216,18 @@ internal class WebitelChat(
                             while (transferRequest.stream.read(fiveKB).also { length = it } > 0) {
                                 if (!inProcess) break
                                 logger.debug("sendFile", "sending $length length of data")
-                                request?.onNext(
-                                    Media.UploadRequest.newBuilder()
-                                        .setPart(ByteString.copyFrom(fiveKB, 0, length))
-                                        .build()
-                                )
+
+                                try {
+                                    request?.onNext(
+                                        Media.UploadRequest.newBuilder()
+                                            .setPart(ByteString.copyFrom(fiveKB, 0, length))
+                                            .build()
+                                    )
+                                } catch (e: Exception) {
+                                    inProcess = false
+                                    logger.error("upload chunk", e.message.toString())
+                                }
+
                             }
                             logger.debug("sendFile", "all bytes sent to stream")
                             if (inProcess) {
