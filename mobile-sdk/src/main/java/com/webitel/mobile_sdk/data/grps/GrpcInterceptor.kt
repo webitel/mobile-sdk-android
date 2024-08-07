@@ -33,10 +33,6 @@ internal class GrpcInterceptor(
         return object : ForwardingClientCall.SimpleForwardingClientCall<ReqT, RespT>(next.newCall(method, callOptions)) {
             override fun sendMessage(message: ReqT) {
                 super.sendMessage(message)
-                WebitelPortalClient.logger.debug(
-                    "intercept",
-                    "Method: ${method?.bareMethodName ?: "undefined bareMethodName"}, Message: ${message.toString()}"
-                )
             }
 
 

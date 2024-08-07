@@ -10,6 +10,7 @@ import com.webitel.mobile_sdk.domain.FileTransferRequest
 import com.webitel.mobile_sdk.domain.HistoryRequest
 import com.webitel.mobile_sdk.domain.MessageCallbackListener
 import com.webitel.mobile_sdk.domain.StreamObserver
+import com.webitel.mobile_sdk.domain.UploadResult
 
 
 internal class WebitelDialog(
@@ -71,11 +72,11 @@ internal class WebitelDialog(
     }
 
 
-    override fun sendFile(
+    override fun uploadFile(
         request: FileTransferRequest,
-        callback: MessageCallbackListener
+        callback: CallbackListener<UploadResult>
     ): CancellationToken {
-        return apiDelegate.sendFile(this, request, callback)
+        return apiDelegate.uploadFile(this, request, callback)
     }
 
 

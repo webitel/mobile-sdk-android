@@ -1,6 +1,5 @@
 package com.webitel.mobile_sdk.domain
 
-import java.io.InputStream
 
 interface Message {
     /**
@@ -57,30 +56,14 @@ interface Message {
         internal var sendId: String? = null
             private set
 
-        internal var fileName: String? = null
-            private set
-
-        internal var mimeType: String? = null
-            private set
-
-        internal var stream: InputStream? = null
-            private set
-
-        internal var listener: MediaUploadListener? = null
+        internal var file: File? = null
             private set
 
         fun sendId(id: String) = apply { this.sendId = id }
 
         fun withText(text: String) = apply { this.text = text }
 
-        @Deprecated(message = "Use 'dialog.sendFile(FileTransferRequest, MessageCallbackListener): CancellationToken' instead")
-        fun withMedia(stream: InputStream, fileName: String, mimeType: String) = apply {
-            this.stream = stream
-            this.mimeType = mimeType
-            this.fileName = fileName
-        }
-
-        fun uploadListener(listener: MediaUploadListener) = apply { this.listener = listener }
+        fun withFile(file: File) = apply { this.file = file }
     }
 
 
@@ -95,14 +78,6 @@ interface Message {
         val text: String
         val mid: Long
         val code: String
-    }
-
-
-    interface File {
-        val id: String
-        val fileName: String
-        val type: String
-        val size: Long
     }
 }
 

@@ -11,8 +11,7 @@ class FileTransferRequest private constructor(
     val fileName: String,
     val mimeType: String,
     val pid: String?,
-    val listener: UploadListener?,
-    val sendId: String?) {
+    val listener: UploadListener?) {
 
 
     /**
@@ -42,7 +41,6 @@ class FileTransferRequest private constructor(
         }
 
         private var listener: UploadListener? = null
-        private var sendId: String? = null
         private var pid: String? = null
 
 
@@ -57,21 +55,12 @@ class FileTransferRequest private constructor(
 
 
         /**
-         * Sets the send ID.
-         *
-         *  @param id The send ID for tracking the transfer.
-         *  @return The Builder instance for chaining.
-         */
-        fun sendId(id: String) = apply { this.sendId = id }
-
-
-        /**
          * Builds and returns a FileTransferRequest instance.
          *
          * @return A configured FileTransferRequest instance.
          */
         fun build(): FileTransferRequest {
-            return FileTransferRequest(stream, fileName, mimeType, pid, listener, sendId)
+            return FileTransferRequest(stream, fileName, mimeType, pid, listener)
         }
     }
 }

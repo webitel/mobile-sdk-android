@@ -7,6 +7,7 @@ import com.webitel.mobile_sdk.domain.DownloadListener
 import com.webitel.mobile_sdk.domain.FileTransferRequest
 import com.webitel.mobile_sdk.domain.MessageCallbackListener
 import com.webitel.mobile_sdk.domain.StreamObserver
+import com.webitel.mobile_sdk.domain.UploadResult
 
 
 internal interface ChatApiDelegate {
@@ -59,9 +60,9 @@ internal interface ChatApiDelegate {
     )
 
 
-    fun sendFile(
+    fun uploadFile(
         dialog: WebitelDialog,
         transferRequest: FileTransferRequest,
-        callback: MessageCallbackListener
+        callback: CallbackListener<UploadResult>
     ): CancellationToken
 }

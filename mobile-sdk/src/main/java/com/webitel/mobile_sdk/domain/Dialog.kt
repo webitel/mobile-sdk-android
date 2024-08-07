@@ -39,11 +39,11 @@ interface Dialog {
 
     /**
      * @param request request to send a file.
-     * @param callback receive result  from server onSent(Message)/onError.
+     * @param callback receive result from server - metadata and hash.
      *
      * @return A CancellationToken that can be used to cancel the sending operation.
      */
-    fun sendFile(request: FileTransferRequest, callback: MessageCallbackListener): CancellationToken
+    fun uploadFile(request: FileTransferRequest, callback: CallbackListener<UploadResult>): CancellationToken
 
 
     /**

@@ -18,6 +18,7 @@ import com.webitel.mobile_sdk.domain.Code
 import com.webitel.mobile_sdk.domain.Dialog
 import com.webitel.mobile_sdk.domain.DownloadListener
 import com.webitel.mobile_sdk.domain.Error
+import com.webitel.mobile_sdk.domain.File
 import com.webitel.mobile_sdk.domain.FileTransferRequest
 import com.webitel.mobile_sdk.domain.InvalidStateException
 import com.webitel.mobile_sdk.domain.Member
@@ -25,6 +26,7 @@ import com.webitel.mobile_sdk.domain.Message
 import com.webitel.mobile_sdk.domain.MessageCallbackListener
 import com.webitel.mobile_sdk.domain.ReplyMarkup
 import com.webitel.mobile_sdk.domain.UploadListener
+import com.webitel.mobile_sdk.domain.UploadResult
 import io.grpc.Status
 import io.grpc.StatusRuntimeException
 import io.grpc.stub.ClientCallStreamObserver
@@ -37,15 +39,13 @@ import webitel.chat.PeerOuterClass
 import webitel.portal.ChatMessagesGrpc
 import webitel.portal.Connect
 import webitel.portal.Media
-import webitel.portal.Media.UploadMedia
 import webitel.portal.Messages
 import webitel.portal.Messages.ChatList
 import webitel.portal.Messages.UpdateNewMessage
 import java.util.UUID
-import java.util.concurrent.CountDownLatch
+import kotlin.math.log
 
 
-const val pause_file_transfer = "pause_file_transfer"
 const val cancel_file_transfer = "cancel_file_transfer"
 
 internal class WebitelChat(
@@ -122,20 +122,23 @@ internal class WebitelChat(
             .setType(dialog.type)
             .build()
 
-        if (options.stream != null) {
-            uploadFile(reqId, options, peer, callback)
+        val messageRequest = Messages.SendMessageRequest
+            .newBuilder()
+            .setPeer(peer)
 
-        } else {
-            if (options.text.isNullOrEmpty()) return
+        if (!options.text.isNullOrEmpty())
+            messageRequest.setText(options.text)
 
-            val messageRequest = Messages.SendMessageRequest
-                .newBuilder()
-                .setPeer(peer)
-                .setText(options.text)
-                .build()
-
-            sendMessage(reqId, messageRequest, callback)
+        options.file?.let {
+            val file = MessageOuterClass.File.newBuilder()
+                .setId(it.id)
+                .setName(it.fileName)
+                .setType(it.type)
+                .setSize(it.size)
+            messageRequest.setFile(file.build())
         }
+
+        sendMessage(reqId, messageRequest.build(), callback)
     }
 
 
@@ -171,33 +174,32 @@ internal class WebitelChat(
     }
 
 
-    override fun sendFile(
+    override fun uploadFile(
         dialog: WebitelDialog,
         transferRequest: FileTransferRequest,
-        callback: MessageCallbackListener
+        callback: CallbackListener<UploadResult>
     ): CancellationToken {
+        var processId = ""
         var inProcess = true
         var isCompleted = false
+        var thread: Thread? = null
         var request: ClientCallStreamObserver<Media.UploadRequest>? = null
-        var processId = ""
-        val sendId = transferRequest.sendId ?: UUID.randomUUID().toString()
 
         val responseObserver = object : ClientResponseObserver<Media.UploadRequest, Media.UploadProgress> {
             override fun onNext(value: Media.UploadProgress?) {
                 if (value == null) return
 
                 if (value.hasStat()) {
-                    logger.debug("sendFile", "File was uploaded; start send message")
-                    val peer = PeerOuterClass.Peer.newBuilder()
-                        .setId(dialog.id)
-                        .setType(dialog.type)
-                        .build()
-                    val messageRequest = Messages.SendMessageRequest
-                        .newBuilder()
-                        .setPeer(peer)
-                        .setFile(value.stat.file)
+                    logger.debug("uploadFile", "File was uploaded - ${value.stat}")
 
-                    sendMessage(sendId, messageRequest.build(), callback)
+                    val file = File(
+                        id = value.stat.file.id,
+                        fileName = value.stat.file.name,
+                        type = value.stat.file.type,
+                        size = value.stat.file.size
+                    )
+                    val result = UploadResult(file, value.stat.hashMap)
+                    callback.onSuccess(result)
 
                 } else {
                     if (value.part.pid.isNotEmpty()) {
@@ -208,7 +210,7 @@ internal class WebitelChat(
                             transferRequest.stream.skip(value.part.size)
                         }
 
-                        val thread = Thread {
+                        thread = Thread {
                             var length: Int
                             val fiveKB = ByteArray(5120)
                             while (transferRequest.stream.read(fiveKB).also { length = it } > 0) {
@@ -225,7 +227,7 @@ internal class WebitelChat(
                                 request?.onCompleted()
                             }
                         }
-                        thread.start()
+                        thread?.start()
                     }
 
                     if (value.part.size > 0) {
@@ -237,6 +239,7 @@ internal class WebitelChat(
 
             override fun onError(t: Throwable) {
                 inProcess = false
+                stopThread(thread)
                 request = null
                 val err = parseError(t)
 
@@ -246,7 +249,6 @@ internal class WebitelChat(
                         logger.debug("sendFile", "File upload canceled")
                     }
                     else -> {
-                        transferRequest.listener?.onError(err)
                         callback.onError(err)
                         logger.error("sendFile", "File upload error - ${err.message}")
                     }
@@ -254,6 +256,7 @@ internal class WebitelChat(
             }
 
             override fun onCompleted() {
+                stopThread(thread)
                 isCompleted = true
                 request = null
             }
@@ -268,6 +271,7 @@ internal class WebitelChat(
         return object : CancellationToken {
             override fun cancel(cleanUp: Boolean) {
                 inProcess = false
+                stopThread(thread)
                 if (isCompleted) {
                     throw InvalidStateException(
                         message = "File upload completed or canceled",
@@ -292,6 +296,8 @@ internal class WebitelChat(
 
             override fun cancel() {
                 inProcess = false
+                stopThread(thread)
+
                 if (isCompleted || request == null) {
                     throw InvalidStateException(
                         message = "File upload completed or canceled",
@@ -304,6 +310,15 @@ internal class WebitelChat(
                     )
                 }
             }
+        }
+    }
+
+
+    private fun stopThread(thread: Thread?) {
+        try {
+            thread?.interrupt()
+        }catch (e: Exception) {
+            logger.debug("stopThread", e.message.toString())
         }
     }
 
@@ -492,84 +507,84 @@ internal class WebitelChat(
     }
 
 
-    private fun uploadFile(
-        sendId: String,
-        options: Message.options,
-        peer: PeerOuterClass.Peer,
-        callback: MessageCallbackListener
-    ) {
-        val countDownLatch = CountDownLatch(1)
-        val responseStreamObserver = object : StreamObserver<MessageOuterClass.File> {
-            override fun onNext(value: MessageOuterClass.File?) {
-                if (value != null) {
-                    val messageRequest = Messages.SendMessageRequest
-                        .newBuilder()
-                        .setPeer(peer)
-                        .setFile(value)
-
-                    if (!options.text.isNullOrEmpty())
-                        messageRequest.text = options.text
-
-                    sendMessage(sendId, messageRequest.build(), callback)
-                }
-            }
-
-            override fun onError(t: Throwable) {
-                val err = parseError(t)
-                callback.onError(err)
-                countDownLatch.countDown()
-            }
-
-            override fun onCompleted() {
-                countDownLatch.countDown()
-            }
-        }
-
-        try {
-            val fileName = options.fileName ?: UUID.randomUUID().toString()
-            val mimeType = options.mimeType ?: "application/octet-stream"
-            val st = chatApi.uploadFile(responseStreamObserver)
-            val request1 = UploadMedia
-                .newBuilder()
-                .setFile(
-                    Media.InputFile.newBuilder()
-                        .setType(mimeType)
-                        .setName(fileName)
-                )
-                .build()
-
-            st.onNext(request1)
-
-            val fiveKB = ByteArray(5120)
-
-            var bytesSent: Long = 0
-            var length: Int
-
-            while (options.stream!!.read(fiveKB).also { length = it } > 0) {
-                Log.d("sending", String.format("sending %d length of data", length))
-                val request = UploadMedia
-                    .newBuilder()
-                    .setData(ByteString.copyFrom(fiveKB, 0, length))
-                    .build()
-
-                st.onNext(request)
-
-                bytesSent += length
-                options.listener?.onProgress(bytesSent)
-            }
-
-            options.listener?.onCompleted()
-
-            options.stream?.close()
-            st.onCompleted()
-            countDownLatch.await()
-
-        } catch (e: Exception) {
-            val err = parseError(e)
-            callback.onError(err)
-            Log.e("uploadFile", e.message.toString())
-        }
-    }
+//    private fun uploadFile(
+//        sendId: String,
+//        options: Message.options,
+//        peer: PeerOuterClass.Peer,
+//        callback: MessageCallbackListener
+//    ) {
+//        val countDownLatch = CountDownLatch(1)
+//        val responseStreamObserver = object : StreamObserver<MessageOuterClass.File> {
+//            override fun onNext(value: MessageOuterClass.File?) {
+//                if (value != null) {
+//                    val messageRequest = Messages.SendMessageRequest
+//                        .newBuilder()
+//                        .setPeer(peer)
+//                        .setFile(value)
+//
+//                    if (!options.text.isNullOrEmpty())
+//                        messageRequest.text = options.text
+//
+//                    sendMessage(sendId, messageRequest.build(), callback)
+//                }
+//            }
+//
+//            override fun onError(t: Throwable) {
+//                val err = parseError(t)
+//                callback.onError(err)
+//                countDownLatch.countDown()
+//            }
+//
+//            override fun onCompleted() {
+//                countDownLatch.countDown()
+//            }
+//        }
+//
+//        try {
+//            val fileName = options.fileName ?: UUID.randomUUID().toString()
+//            val mimeType = options.mimeType ?: "application/octet-stream"
+//            val st = chatApi.uploadFile(responseStreamObserver)
+//            val request1 = UploadMedia
+//                .newBuilder()
+//                .setFile(
+//                    Media.InputFile.newBuilder()
+//                        .setType(mimeType)
+//                        .setName(fileName)
+//                )
+//                .build()
+//
+//            st.onNext(request1)
+//
+//            val fiveKB = ByteArray(5120)
+//
+//            var bytesSent: Long = 0
+//            var length: Int
+//
+//            while (options.stream!!.read(fiveKB).also { length = it } > 0) {
+//                Log.d("sending", String.format("sending %d length of data", length))
+//                val request = UploadMedia
+//                    .newBuilder()
+//                    .setData(ByteString.copyFrom(fiveKB, 0, length))
+//                    .build()
+//
+//                st.onNext(request)
+//
+//                bytesSent += length
+//                options.listener?.onProgress(bytesSent)
+//            }
+//
+//            options.listener?.onCompleted()
+//
+//            options.stream?.close()
+//            st.onCompleted()
+//            countDownLatch.await()
+//
+//        } catch (e: Exception) {
+//            val err = parseError(e)
+//            callback.onError(err)
+//            Log.e("uploadFile", e.message.toString())
+//        }
+//    }
 
 
     private fun sendMessage(
@@ -919,12 +934,12 @@ internal class WebitelChat(
     }
 
 
-    private fun toFile(value: MessageOuterClass.File?): WebitelFile? {
-        return if (value == null || value.name.isNullOrEmpty()) null else WebitelFile(
+    private fun toFile(value: MessageOuterClass.File?): File? {
+        return if (value == null || value.name.isNullOrEmpty()) null else File(
             value.name,
             value.type,
+            value.id,
             value.size,
-            value.id
         )
     }
 
