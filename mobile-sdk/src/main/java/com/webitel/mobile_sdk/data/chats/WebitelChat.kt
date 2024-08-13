@@ -943,10 +943,10 @@ internal class WebitelChat(
 
     private fun toFile(value: MessageOuterClass.File?): File? {
         return if (value == null || value.name.isNullOrEmpty()) null else File(
-            value.name,
-            value.type,
-            value.id,
-            value.size,
+            fileName = value.name,
+            type = value.type,
+            id = value.id,
+            size = value.size,
         )
     }
 
