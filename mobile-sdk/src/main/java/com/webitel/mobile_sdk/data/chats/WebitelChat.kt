@@ -43,7 +43,6 @@ import webitel.portal.Messages
 import webitel.portal.Messages.ChatList
 import webitel.portal.Messages.UpdateNewMessage
 import java.util.UUID
-import kotlin.math.log
 
 
 const val cancel_file_transfer = "cancel_file_transfer"
@@ -218,6 +217,7 @@ internal class WebitelChat(
                                 logger.debug("sendFile", "sending $length length of data")
 
                                 try {
+                                    Thread.sleep(5)
                                     request?.onNext(
                                         Media.UploadRequest.newBuilder()
                                             .setPart(ByteString.copyFrom(fiveKB, 0, length))
