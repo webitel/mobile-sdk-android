@@ -129,6 +129,7 @@ internal class FileUploader(val api: ChatApi) {
                             } catch (e: Exception) {
                                 isUploading = false
                                 call?.cancel(e.message, e)
+                                call = null
                             }
                         }
                         processQueue(request, call)
@@ -311,6 +312,7 @@ internal class FileUploader(val api: ChatApi) {
             )
             return
         }
+
         handler.make {
             if (activeChunksCount.get() > maxActiveChunks) {
                 return@make
@@ -319,20 +321,30 @@ internal class FileUploader(val api: ChatApi) {
             try {
                 while (request.transferRequest.stream.read(fiveKB).also { length = it } > 0) {
                     isChunkSending = true
-                    logger.debug("Chunk Upload", "Chunk size: $length bytes, Active: ${activeChunksCount.get()}")
+                    logger.debug(
+                        "Chunk Upload",
+                        "Chunk size: $length bytes, Active: ${activeChunksCount.get()}"
+                    )
 
                     val chunk = Media.UploadRequest.newBuilder()
                         .setPart(ByteString.copyFrom(fiveKB, 0, length))
                         .build()
 
+                    if (!isUploading) {
+                        isChunkSending = false
+                        break
+                    }
+
                     call?.onNext(chunk)
-                    if (activeChunksCount.incrementAndGet() > maxActiveChunks) {
+
+                    if (activeChunksCount.incrementAndGet() > maxActiveChunks || !isUploading) {
                         isChunkSending = false
                         break
                     }
                 }
 
                 finalizeSendingIfNeeded(request, call)
+
             } catch (e: Exception) {
                 handleUploadError(e, request, activeProcess)
             }
