@@ -2,7 +2,6 @@ package com.webitel.mobile_sdk.data.chats
 
 import android.util.Log
 import com.google.protobuf.Any
-import com.google.protobuf.ByteString
 import com.webitel.mobile_sdk.data.grps.ChatApi
 import com.webitel.mobile_sdk.data.grps.GrpcChatMessageListener
 import com.webitel.mobile_sdk.data.grps.`is`
@@ -25,7 +24,6 @@ import com.webitel.mobile_sdk.domain.Member
 import com.webitel.mobile_sdk.domain.Message
 import com.webitel.mobile_sdk.domain.MessageCallbackListener
 import com.webitel.mobile_sdk.domain.ReplyMarkup
-import com.webitel.mobile_sdk.domain.UploadListener
 import com.webitel.mobile_sdk.domain.UploadResult
 import io.grpc.Status
 import io.grpc.StatusRuntimeException
@@ -54,6 +52,7 @@ internal class WebitelChat(
 ) : ChatClient, GrpcChatMessageListener, ChatApiDelegate {
 
     private val dialogs: ArrayList<WebitelDialog> = arrayListOf()
+    private val uploader = FileUploader(chatApi)
 
 
     override fun getServiceDialog(callback: CallbackListener<Dialog>) {
@@ -178,216 +177,18 @@ internal class WebitelChat(
         transferRequest: FileTransferRequest,
         callback: CallbackListener<UploadResult>
     ): CancellationToken {
-        var processId = ""
-        var inProcess = true
-        var isCompleted = false
-        var thread: Thread? = null
-        var request: ClientCallStreamObserver<Media.UploadRequest>? = null
-
-        val responseObserver = object : ClientResponseObserver<Media.UploadRequest, Media.UploadProgress> {
-            override fun onNext(value: Media.UploadProgress?) {
-                if (value == null) return
-
-                if (value.hasStat()) {
-                    logger.debug("uploadFile", "File was uploaded - ${value.stat}")
-
-                    val file = File(
-                        id = value.stat.file.id,
-                        fileName = value.stat.file.name,
-                        type = value.stat.file.type,
-                        size = value.stat.file.size
-                    )
-                    val result = UploadResult(file, value.stat.hashMap)
-                    callback.onSuccess(result)
-
-                } else {
-                    if (value.part.pid.isNotEmpty()) {
-                        transferRequest.listener?.onStarted(value.part.pid)
-                        processId = value.part.pid
-
-                        if (value.part.size > 0) {
-                            transferRequest.stream.skip(value.part.size)
-                        }
-
-                        thread = Thread {
-                            var length: Int
-                            val fiveKB = ByteArray(5120)
-                            while (transferRequest.stream.read(fiveKB).also { length = it } > 0) {
-                                if (!inProcess) break
-                                logger.debug("sendFile", "sending $length length of data")
-
-                                try {
-                                    Thread.sleep(5)
-                                    request?.onNext(
-                                        Media.UploadRequest.newBuilder()
-                                            .setPart(ByteString.copyFrom(fiveKB, 0, length))
-                                            .build()
-                                    )
-                                } catch (e: Exception) {
-                                    inProcess = false
-                                    logger.error("upload chunk", e.message.toString())
-                                }
-
-                            }
-                            logger.debug("sendFile", "all bytes sent to stream")
-                            if (inProcess) {
-                                request?.onCompleted()
-                            }
-                        }
-                        thread?.start()
-                    }
-
-                    if (value.part.size > 0) {
-                        logger.debug("sendFile", "progress - ${value.part.size}")
-                        transferRequest.listener?.onProgress(value.part.size)
-                    }
-                }
-            }
-
-            override fun onError(t: Throwable) {
-                inProcess = false
-                stopThread(thread)
-                request = null
-                val err = parseError(t)
-
-                when (err.message) {
-                    cancel_file_transfer -> {
-                        transferRequest.listener?.onCanceled()
-                        logger.debug("sendFile", "File upload canceled")
-                    }
-                    else -> {
-                        callback.onError(err)
-                        logger.error("sendFile", "File upload error - ${err.message}")
-                    }
-                }
-            }
-
-            override fun onCompleted() {
-                stopThread(thread)
-                isCompleted = true
-                request = null
-            }
-
-            override fun beforeStart(requestStream: ClientCallStreamObserver<Media.UploadRequest>?) {
-                request = requestStream
-            }
-        }
-
-        startUpload(transferRequest, responseObserver)
+        val id = UUID.randomUUID().toString()
+        uploader.upload(UploadRequest(id, dialog, transferRequest, callback))
 
         return object : CancellationToken {
-            override fun cancel(cleanUp: Boolean) {
-                inProcess = false
-                stopThread(thread)
-                if (isCompleted) {
-                    throw InvalidStateException(
-                        message = "File upload completed or canceled",
-                    )
-                }
-                if (cleanUp) {
-                    isCompleted = true
-                    val listener =
-                        if (request == null) transferRequest.listener
-                        else null
+             override fun cancel(cleanUp: Boolean) {
+                 uploader.cancel(id, cleanUp)
+             }
 
-                    request?.cancel(
-                        cancel_file_transfer,
-                        Status.CANCELLED.asException()
-                    )
-
-                    killUpload(processId, listener)
-                } else {
-                    this.cancel()
-                }
-            }
-
-            override fun cancel() {
-                inProcess = false
-                stopThread(thread)
-
-                if (isCompleted || request == null) {
-                    throw InvalidStateException(
-                        message = "File upload completed or canceled",
-                    )
-
-                } else {
-                    request?.cancel(
-                        cancel_file_transfer,
-                        Status.CANCELLED.asException()
-                    )
-                }
-            }
-        }
-    }
-
-
-    private fun stopThread(thread: Thread?) {
-        try {
-            thread?.interrupt()
-        }catch (e: Exception) {
-            logger.debug("stopThread", e.message.toString())
-        }
-    }
-
-
-    private fun killUpload(pid: String, listener: UploadListener?) {
-        var stream: ClientCallStreamObserver<Media.UploadRequest>? = null
-        val responseObserver = object : ClientResponseObserver<Media.UploadRequest, Media.UploadProgress> {
-            override fun onNext(value: Media.UploadProgress?) {
-                if (!value?.part?.pid.isNullOrEmpty()) {
-                    stream?.onNext(
-                        Media.UploadRequest.newBuilder()
-                                .setKill(Media.UploadRequest.Abort.newBuilder().build())
-                                .build()
-                    )
-                }
-            }
-
-            override fun onError(t: Throwable) {
-                val err = parseError(t)
-                logger.error("sendFile", "Kill upload error - ${err}")
-            }
-
-            override fun onCompleted() {
-                listener?.onCanceled()
-                logger.debug("sendFile", "Data on the server is cleared")
-            }
-
-            override fun beforeStart(requestStream: ClientCallStreamObserver<Media.UploadRequest>?) {
-                stream = requestStream
-            }
-        }
-
-        val req = Media.UploadRequest.newBuilder()
-        req.setPid(pid)
-
-        val st = chatApi.uploadFile(responseObserver)
-        st.onNext(req.build())
-    }
-
-
-    private fun startUpload(transferRequest: FileTransferRequest,
-                            responseObserver: ClientResponseObserver<Media.UploadRequest, Media.UploadProgress>) {
-        val req = Media.UploadRequest.newBuilder()
-        if (transferRequest.pid == null) {
-            req.setNew(
-                Media.UploadRequest.Start.newBuilder()
-                    .setFile(
-                        Media.InputFile.newBuilder()
-                            .setName(transferRequest.fileName)
-                            .setType(transferRequest.mimeType)
-                            .build()
-                    )
-                    .setProgress(true)
-                    .build()
-            )
-
-        } else {
-            req.setPid(transferRequest.pid)
-        }
-
-        val st = chatApi.uploadFile(responseObserver)
-        st.onNext(req.build())
+             override fun cancel() {
+                 uploader.cancel(id, false)
+             }
+         }
     }
 
 
@@ -512,86 +313,6 @@ internal class WebitelChat(
         request.setFileId(fileId)
         chatApi.downloadFile(request.build(), streamObserver)
     }
-
-
-//    private fun uploadFile(
-//        sendId: String,
-//        options: Message.options,
-//        peer: PeerOuterClass.Peer,
-//        callback: MessageCallbackListener
-//    ) {
-//        val countDownLatch = CountDownLatch(1)
-//        val responseStreamObserver = object : StreamObserver<MessageOuterClass.File> {
-//            override fun onNext(value: MessageOuterClass.File?) {
-//                if (value != null) {
-//                    val messageRequest = Messages.SendMessageRequest
-//                        .newBuilder()
-//                        .setPeer(peer)
-//                        .setFile(value)
-//
-//                    if (!options.text.isNullOrEmpty())
-//                        messageRequest.text = options.text
-//
-//                    sendMessage(sendId, messageRequest.build(), callback)
-//                }
-//            }
-//
-//            override fun onError(t: Throwable) {
-//                val err = parseError(t)
-//                callback.onError(err)
-//                countDownLatch.countDown()
-//            }
-//
-//            override fun onCompleted() {
-//                countDownLatch.countDown()
-//            }
-//        }
-//
-//        try {
-//            val fileName = options.fileName ?: UUID.randomUUID().toString()
-//            val mimeType = options.mimeType ?: "application/octet-stream"
-//            val st = chatApi.uploadFile(responseStreamObserver)
-//            val request1 = UploadMedia
-//                .newBuilder()
-//                .setFile(
-//                    Media.InputFile.newBuilder()
-//                        .setType(mimeType)
-//                        .setName(fileName)
-//                )
-//                .build()
-//
-//            st.onNext(request1)
-//
-//            val fiveKB = ByteArray(5120)
-//
-//            var bytesSent: Long = 0
-//            var length: Int
-//
-//            while (options.stream!!.read(fiveKB).also { length = it } > 0) {
-//                Log.d("sending", String.format("sending %d length of data", length))
-//                val request = UploadMedia
-//                    .newBuilder()
-//                    .setData(ByteString.copyFrom(fiveKB, 0, length))
-//                    .build()
-//
-//                st.onNext(request)
-//
-//                bytesSent += length
-//                options.listener?.onProgress(bytesSent)
-//            }
-//
-//            options.listener?.onCompleted()
-//
-//            options.stream?.close()
-//            st.onCompleted()
-//            countDownLatch.await()
-//
-//        } catch (e: Exception) {
-//            val err = parseError(e)
-//            callback.onError(err)
-//            Log.e("uploadFile", e.message.toString())
-//        }
-//    }
 
 
     private fun sendMessage(
