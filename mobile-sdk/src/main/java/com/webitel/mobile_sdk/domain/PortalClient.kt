@@ -71,9 +71,11 @@ interface PortalClient {
 
         internal var ver: String = "0.0.0"
         internal var name: String = ""
-        internal var fcmToken: String = ""
         internal var deviceId: String = ""
         internal var logLevel: LogLevel = LogLevel.ERROR
+
+        internal var keepAliveTime: Long = 10
+        internal var keepAliveTimeout: Long = 10
 
 
         /**
@@ -104,10 +106,24 @@ interface PortalClient {
         fun logLevel(value: LogLevel) = apply { this.logLevel = value }
 
 
-//        /**
-//         * FCM Token. From Firebase
-//         */
-//        fun fcmToken(fcmToken: String) = apply { this.fcmToken = fcmToken }
+        /**
+         * Sets the time without read activity before sending a keepalive ping.
+         * If the value is too small, it may be increased to a reasonable minimum.
+         * A value of Long.MAX_VALUE disables keepalive. Defaults to 10 seconds.
+         *
+         * @param seconds The time in seconds without read activity before sending a keepalive ping.
+         */
+        fun setKeepAliveTime(seconds: Long) = apply { this.keepAliveTime = seconds }
+
+
+        /**
+         * Sets the time waiting for read activity after sending a keepalive ping.
+         * If the time expires without any read activity, the connection is considered dead.
+         * If the value is too small, it may be increased to a reasonable minimum. Defaults to 10 seconds.
+         *
+         * @param seconds The time in seconds to wait for a read activity after sending a keepalive ping.
+         */
+        fun setKeepAliveTimeout(seconds: Long) = apply { this.keepAliveTimeout = seconds }
 
 
         fun build(): PortalClient {

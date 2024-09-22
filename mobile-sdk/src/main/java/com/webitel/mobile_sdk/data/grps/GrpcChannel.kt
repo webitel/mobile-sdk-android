@@ -2,6 +2,7 @@ package com.webitel.mobile_sdk.data.grps
 
 import io.grpc.ManagedChannel
 import io.grpc.ManagedChannelBuilder
+import java.util.concurrent.TimeUnit
 
 
 internal class GrpcChannel(
@@ -21,6 +22,9 @@ internal class GrpcChannel(
                 config.host, // "dev.webitel.com",
                 config.port // 443
             )
+            .keepAliveWithoutCalls(false)
+            .keepAliveTime(config.keepAliveTime, TimeUnit.SECONDS)
+            .keepAliveTimeout(config.keepAliveTimeout, TimeUnit.SECONDS)
             .userAgent(config.agent)
             .intercept(interceptor)
             .build()

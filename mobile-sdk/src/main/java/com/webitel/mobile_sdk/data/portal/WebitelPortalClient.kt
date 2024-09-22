@@ -230,7 +230,9 @@ internal class WebitelPortalClient(
             port = uri.port,
             agent = getUserAgent(),
             clientToken = client.token,
-            deviceId = deviceId
+            deviceId = deviceId,
+            keepAliveTime = client.keepAliveTime,
+            keepAliveTimeout = client.keepAliveTimeout
         )
     }
 
