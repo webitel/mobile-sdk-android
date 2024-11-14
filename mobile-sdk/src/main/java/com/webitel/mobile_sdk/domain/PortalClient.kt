@@ -1,67 +1,135 @@
 package com.webitel.mobile_sdk.domain
 
 import android.app.Application
-import android.util.Log
 import com.webitel.mobile_sdk.data.portal.WebitelPortalClient
 import com.webitel.mobile_sdk.data.LibraryModule
 
 
+/**
+ * Interface for interacting with the Portal Client, allowing actions such as logging in, managing sessions,
+ * handling user notifications, and managing the state of chat and voice clients.
+ */
 interface PortalClient {
 
+    /**
+     * Fetches a ChatClient instance.
+     * @param callback The callback that will handle the response with the ChatClient object.
+     */
     fun getChatClient(callback: CallbackListener<ChatClient>)
+
+
+    /**
+     * Fetches a VoiceClient instance.
+     * @param callback The callback that will handle the response with the VoiceClient object.
+     */
     fun getVoiceClient(callback: CallbackListener<VoiceClient>)
 
+
+    /**
+     * Logs in the user with the provided user data.
+     * @param user The user to log in.
+     * @param callback The callback to handle the login result.
+     */
     fun userLogin(user: User, callback: LoginListener)
+
+
+    /**
+     * Logs out the current user.
+     * @param callback The callback to handle the logout result.
+     */
     fun userLogout(callback: LoginListener)
 
+
+    /**
+     * Retrieves the current user session.
+     * @param callback The callback to handle the response with the current session.
+     */
     fun getUserSession(callback: CallbackListener<Session>)
 
-    /**
-     * Sets and immediately validates the token. The result will be returned in the callback
-     * */
-    fun setAccessToken(token: String, callback: CallbackListener<Session>)
 
     /**
-     * Sets the token in headers without validation
+     * Sets the access token and immediately validates it.
+     * If the token is valid, the callback will return the user session associated with the token.
+     * In case of an error, the callback will return an error.
+     *
+     * @param token The access token to set.
+     * @param callback The callback to handle the response with the user session or an error.
+     */
+    fun setAccessToken(token: String, callback: CallbackListener<Session>)
+
+
+    /**
+     * Sets the access token in the headers.
+     * If there is an open connection, the token will be validated and updated in the connection.
+     * If the connection is closed, the token is set in the headers and will be used when the connection is opened.
+     *
+     * @param token The access token to set in the headers.
      */
     fun  setAccessTokenHeader(token: String)
 
+
     /**
-     * Sets the access token.
+     * Sets the access token in the headers.
+     * If there is an open connection, the token will be validated and updated in the connection.
+     * If the connection is closed, the token is set in the headers and will be used when the connection is opened.
      *
-     * This function stores the provided access token and calls the callback upon completion of the operation.
-     *
-     * @param token The access token to be set.
-     * @param callback called when the operation is finished, where:
-     *
-     * `.onSuccess`: If the token was successfully set.
-     * `.onError`: If an error occurred while setting the token, along with an `Error` object describing the error.
+     * @param token The access token to set in the headers.
+     * @param callback The optional callback to handle the result after setting the token in the headers.
      */
     fun  setAccessTokenHeader(token: String, callback: CallbackListener<Unit>)
 
+
     /**
-     * Register device PUSH subscription
-     * */
+     * Registers the device for push notifications with the provided token.
+     * @param pushToken The push token for the device.
+     * @param callback The callback to handle the registration result.
+     */
     fun registerDevice(pushToken: String, callback: CallbackListener<RegisterResult>)
 
+
+    /**
+     * Handles incoming FCM (Firebase Cloud Messaging) notifications.
+     * @param data The notification data to process.
+     */
     fun handleFCMNotification(data: Map<String, String>)
 
 
+    /**
+     * Retrieves the current connection state.
+     * @return The current connection state.
+     */
     fun getConnectState(): ConnectState
 
+
+    /**
+     * Adds a listener for connection state changes.
+     * @param listener The listener to be added.
+     */
     fun addConnectListener(listener: ConnectListener)
 
+
+    /**
+     * Removes a previously added connection state listener.
+     * @param listener The listener to be removed.
+     */
     fun removeConnectListener(listener: ConnectListener)
 
+
+    /**
+     * Opens a connection to the portal.
+     */
     fun openConnect()
 
+
+    /**
+     * Closes the connection to the portal.
+     */
     fun closeConnect()
 
 
     /**
-     * @param application Application context.
-     * @param address Webitel Customer Portal service host address ; e.g.: grpcs://dev.webitel.com:443
-     * @param token Webitel (Client: Portal App) token issued.
+     * Builder for configuring and creating an instance of PortalClient.
+     * Allows setting parameters like application context, server address, access token, logging level, and connection settings.
      */
     data class Builder(
         internal val application: Application,
@@ -79,17 +147,26 @@ interface PortalClient {
 
 
         /**
-         * Android (Client) Application display name ; e.g.: "MyAndroidApp"
+         * Sets the Android application display name.
+         * @param name The display name of the application.
+         * @return The Builder instance for method chaining.
          */
         fun appName(name: String) = apply { this.name = name }
 
 
         /**
-         * Android Application code version ; e.g.: "1.0"
+         * Sets the Android application version.
+         * @param version The version of the application.
+         * @return The Builder instance for method chaining.
          */
         fun appVersion(version: String) = apply { this.ver = version }
 
 
+        /**
+         * Sets the device ID for the client.
+         * @param value The device ID.
+         * @return The Builder instance for method chaining.
+         */
         fun deviceId(value: String) = apply { this.deviceId = value }
 
 
@@ -126,6 +203,10 @@ interface PortalClient {
         fun setKeepAliveTimeout(seconds: Long) = apply { this.keepAliveTimeout = seconds }
 
 
+        /**
+         * Builds and returns a PortalClient instance.
+         * @return A new instance of PortalClient.
+         */
         fun build(): PortalClient {
             LibraryModule.initializeDI(application)
             return WebitelPortalClient(this)
