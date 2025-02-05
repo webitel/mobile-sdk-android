@@ -1,6 +1,5 @@
 package com.webitel.mobile_sdk.data.chats
 
-import android.util.Log
 import com.google.protobuf.Any
 import com.webitel.mobile_sdk.data.grps.ChatApi
 import com.webitel.mobile_sdk.data.grps.GrpcChatMessageListener
@@ -97,7 +96,9 @@ internal class WebitelChat(
                 }
 
                 override fun onError(e: Error) {
-                    Log.e("onNewMessage", e.message)
+                    logger.error("WebitelChat",
+                        "onNewMessage: onError - ${e.message}"
+                    )
                 }
             })
         } else {
@@ -236,10 +237,9 @@ internal class WebitelChat(
                 if (value != null) {
                     if (value.data.size() > 0) {
                         listener.onData(value.data.toByteArray())
-
                         logger.debug(
-                            "downloadFile",
-                            "chunkSize - ${value.data.size()}"
+                            "WebitelChat",
+                            "downloadFile: chunkSize - ${value.data.size()}"
                         )
                     }
                 }
@@ -252,11 +252,15 @@ internal class WebitelChat(
                 when (err.message) {
                     cancel_file_transfer -> {
                         listener.onCanceled()
-                        logger.debug("downloadFile", "File download canceled")
+                        logger.debug("WebitelChat",
+                            "downloadFile: file download canceled"
+                        )
                     }
                     else -> {
                         listener.onError(err)
-                        logger.error("downloadFile", "File download error - ${err.message}")
+                        logger.error("WebitelChat",
+                            "downloadFile: file download error - ${err.message}"
+                        )
                     }
                 }
             }
@@ -265,7 +269,7 @@ internal class WebitelChat(
                 request = null
                 isCompleted = true
                 listener.onCompleted()
-                logger.debug("downloadFile", "File download complete")
+                logger.debug("WebitelChat", "downloadFile: file download complete")
             }
 
             override fun beforeStart(requestStream: ClientCallStreamObserver<Media.GetFileRequest>?) {
@@ -285,7 +289,9 @@ internal class WebitelChat(
                 } else {
                     if (request == null) {
                         listener.onCanceled()
-                        logger.debug("downloadFile", "File download canceled")
+                        logger.debug("WebitelChat",
+                            "downloadFile: cancel - process is not active. Request not found."
+                        )
 
                     } else {
                         request?.cancel(
@@ -520,7 +526,7 @@ internal class WebitelChat(
                     )
                 } else {
                     val err = Error(
-                        message = "Bad response.  MessageOuterClass.Message not found. $response",
+                        message = "Bad response. MessageOuterClass.Message not found. $response",
                         code = Code.DATA_LOSS
                     )
                     request.callback.onError(err)
@@ -656,7 +662,9 @@ internal class WebitelChat(
         } else if (value.hasUrl()) {
             Button.Url(text = value.text, url = value.url)
         } else {
-            logger.warn("toButton", "button type not implemented yet; $value")
+            logger.warn("WebitelChat",
+                "toButton: button type not implemented yet; $value"
+            )
             null
         }
     }
@@ -722,7 +730,7 @@ internal class WebitelChat(
                 } else {
                     request.callback.onError(
                         Error(
-                            "entity  was not found",
+                            "dialog was not found",
                             Code.NOT_FOUND
                         )
                     )

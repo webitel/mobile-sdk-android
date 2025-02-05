@@ -132,9 +132,9 @@ interface PortalClient {
      * Allows setting parameters like application context, server address, access token, logging level, and connection settings.
      */
     data class Builder(
-        internal val application: Application,
-        internal var address: String,
-        internal var token: String
+        val application: Application,
+        var address: String,
+        var token: String
     ) {
 
         internal var ver: String = "0.0.0"
@@ -190,7 +190,7 @@ interface PortalClient {
          *
          * @param seconds The time in seconds without read activity before sending a keepalive ping.
          */
-        fun setKeepAliveTime(seconds: Long) = apply { this.keepAliveTime = seconds }
+        fun keepAliveTime(seconds: Long) = apply { this.keepAliveTime = seconds }
 
 
         /**
@@ -200,7 +200,7 @@ interface PortalClient {
          *
          * @param seconds The time in seconds to wait for a read activity after sending a keepalive ping.
          */
-        fun setKeepAliveTimeout(seconds: Long) = apply { this.keepAliveTimeout = seconds }
+        fun keepAliveTimeout(seconds: Long) = apply { this.keepAliveTimeout = seconds }
 
 
         /**

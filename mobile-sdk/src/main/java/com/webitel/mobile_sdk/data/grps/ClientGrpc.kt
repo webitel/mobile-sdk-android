@@ -162,11 +162,15 @@ internal class ClientGrpc(
 
                     stub.inspect(m, object : StreamObserver<Auth.AccessToken> {
                         override fun onNext(value: Auth.AccessToken?) {
-                            logger.debug("token", "token updated in headers and stream")
+                            logger.debug("ClientGrpc",
+                                "setAccessTokenHeader: token updated in headers and stream"
+                            )
                             callback?.onSuccess(Unit)
                         }
                         override fun onError(t: Throwable) {
-                            logger.error("token", "token not updated in stream. ${t.message}")
+                            logger.error("ClientGrpc",
+                                "setAccessTokenHeader: token not updated in stream. ${t.message}"
+                            )
                             callback?.let {
                                 val err = parseError(t)
                                 it.onError(err)
@@ -175,7 +179,9 @@ internal class ClientGrpc(
                         override fun onCompleted() {}
                     })
                 } catch (e: Exception) {
-                    logger.error("token", "token not updated in stream. ${e.message}")
+                    logger.error("ClientGrpc",
+                        "setAccessTokenHeader: token not updated in stream. Exception - ${e.message}"
+                    )
                     callback?.let {
                         val err = parseError(e)
                         it.onError(err)
@@ -183,7 +189,9 @@ internal class ClientGrpc(
                 }
 
             }else {
-                logger.debug("token", "token updated in headers")
+                logger.debug("ClientGrpc",
+                    "setAccessTokenHeader: token updated in headers"
+                )
                 callback?.onSuccess(Unit)
             }
         }
@@ -227,11 +235,16 @@ internal class ClientGrpc(
                                 token = value.accessToken,
                                 expiresIn = value.expiresIn
                             )
-
+                            logger.debug("ClientGrpc",
+                                "login: success"
+                            )
                             callback.onSuccess(
                                 LoginResponse(t,s)
                             )
                         } else {
+                            logger.error("ClientGrpc",
+                                "login: auth.AccessToken not found"
+                            )
                             callback.onError(
                                 Error(
                                     "Auth.AccessToken not found",
@@ -242,7 +255,9 @@ internal class ClientGrpc(
                     }
 
                     override fun onError(t: Throwable) {
-                        Log.e("Login.onError", t.message.toString())
+                        logger.error("ClientGrpc",
+                            "login: onError - ${t.message.toString()}"
+                        )
                         callback.onError(parseError(t))
                     }
 
@@ -250,6 +265,9 @@ internal class ClientGrpc(
                 })
 
             } catch (e: Exception) {
+                logger.error("ClientGrpc",
+                    "login: Exception - ${e.message}"
+                )
                 callback.onError(parseError(e))
             }
         }
@@ -269,11 +287,16 @@ internal class ClientGrpc(
 
                 stub.logout(m, object : StreamObserver<UpdateDisconnect> {
                     override fun onNext(value: UpdateDisconnect?) {
+                        logger.debug("ClientGrpc",
+                            "logout: success"
+                        )
                         callback.onSuccess(Unit)
                     }
 
                     override fun onError(t: Throwable) {
-                        Log.e("Logout.onError", t.message.toString())
+                        logger.error("ClientGrpc",
+                            "logout: onError - ${t.message.toString()}"
+                        )
                         callback.onError(parseError(t))
                     }
 
@@ -281,6 +304,9 @@ internal class ClientGrpc(
                 })
 
             } catch (e: Exception) {
+                logger.error("ClientGrpc",
+                    "logout: Exception - ${e.message}"
+                )
                 callback.onError(parseError(e))
             }
         }
@@ -382,9 +408,14 @@ internal class ClientGrpc(
                             password = password,
                             proxy = sip.proxy
                         )
-
+                        logger.debug("ClientGrpc",
+                            "getSipConfig: success"
+                        )
                         callback.onSuccess(s)
                     } else {
+                        logger.error("ClientGrpc",
+                            "getSipConfig: SIP Config not found"
+                        )
                         callback.onError(
                             Error(
                                 "SIP Config not found",
@@ -395,7 +426,9 @@ internal class ClientGrpc(
                 }
 
                 override fun onError(t: Throwable) {
-                    Log.e("getSip.onError", t.message.toString())
+                    logger.error("ClientGrpc",
+                        "getSipConfig: onError - ${t.message.toString()}"
+                    )
                     callback.onError(parseError(t))
                 }
 
@@ -403,6 +436,9 @@ internal class ClientGrpc(
             })
 
         } catch (e: Exception) {
+            logger.error("ClientGrpc",
+                "getSipConfig: Exception - ${e.message}"
+            )
             callback.onError(parseError(e))
         }
     }
@@ -487,7 +523,9 @@ internal class ClientGrpc(
     @Synchronized
     private fun postData(request: Request) {
         checkAndOpenConnection()
-        logger.debug("request", request.toString())
+        logger.debug("ClientGrpc",
+            "postData: $request"
+        )
         requestObserver?.onNext(request)
     }
 
@@ -521,10 +559,16 @@ internal class ClientGrpc(
             stub.registerDevice(i, object : StreamObserver<RegisterDeviceResponse> {
 
                 override fun onNext(value: RegisterDeviceResponse?) {
+                    logger.debug("ClientGrpc",
+                        "registerFcmUnaryRequest: success"
+                    )
                     callback.onSuccess(RegisterResult())
                 }
 
                 override fun onError(t: Throwable) {
+                    logger.error("ClientGrpc",
+                        "registerFcmUnaryRequest: onError - ${t.message}"
+                    )
                     callback.onError(parseError(t))
                 }
 
@@ -532,6 +576,9 @@ internal class ClientGrpc(
             })
 
         } catch (e: Exception) {
+            logger.error("ClientGrpc",
+                "registerFcmUnaryRequest: Exception - ${e.message}"
+            )
             callback.onError(
                 Error(
                     e.message.toString(),
@@ -557,8 +604,14 @@ internal class ClientGrpc(
                 override fun onNext(value: Auth.AccessToken?) {
                     if (value != null) {
                         val s = buildSessionFromResponse(value)
+                        logger.debug("ClientGrpc",
+                            "setSessionUnaryRequest: success"
+                        )
                         callback.onSuccess(s)
                     } else {
+                        logger.error("ClientGrpc",
+                            "setSessionUnaryRequest: Auth.AccessToken not found"
+                        )
                         callback.onError(
                             Error(
                                 "Auth.AccessToken not found",
@@ -569,6 +622,9 @@ internal class ClientGrpc(
                 }
 
                 override fun onError(t: Throwable) {
+                    logger.error("ClientGrpc",
+                        "setSessionUnaryRequest: onError - ${t.message}"
+                    )
                     callback.onError(parseError(t))
                 }
 
@@ -576,6 +632,9 @@ internal class ClientGrpc(
             })
 
         } catch (e: Exception) {
+            logger.error("ClientGrpc",
+                "setSessionUnaryRequest: Exception - ${e.message}"
+            )
             callback.onError(
                 Error(
                     e.message.toString(),
@@ -599,8 +658,14 @@ internal class ClientGrpc(
                 override fun onNext(value: Auth.AccessToken?) {
                     if (value != null) {
                         val s = buildSessionFromResponse(value)
+                        logger.debug("ClientGrpc",
+                            "inspectUnaryRequest: success"
+                        )
                         callback.onSuccess(s)
                     } else {
+                        logger.error("ClientGrpc",
+                            "inspectUnaryRequest: Auth.AccessToken not found"
+                        )
                         callback.onError(
                             Error(
                                 "Auth.AccessToken not found",
@@ -611,6 +676,9 @@ internal class ClientGrpc(
                 }
 
                 override fun onError(t: Throwable) {
+                    logger.error("ClientGrpc",
+                        "inspectUnaryRequest: onError - ${t.message}"
+                    )
                     callback.onError(parseError(t))
                 }
 
@@ -618,6 +686,9 @@ internal class ClientGrpc(
             })
 
         } catch (e: Exception) {
+            logger.error("ClientGrpc",
+                "inspectUnaryRequest: Exception - ${e.message}"
+            )
             callback.onError(
                 Error(
                     e.message.toString(),
@@ -661,7 +732,9 @@ internal class ClientGrpc(
     private fun openBiDirectionalConnect() {
         try {
             resetBackoff()
-            logger.debug("connect", "create new connection...")
+            logger.debug("ClientGrpc",
+                "openConnect: create new connection..."
+            )
             val stub = CustomerGrpc.newStub(channel.channel)
             requestObserver?.onCompleted()
             requestObserver = stub.connect(object : StreamObserver<Update> {
@@ -673,7 +746,9 @@ internal class ClientGrpc(
                 }
 
                 override fun onError(t: Throwable) {
-                    logger.error("connect", t.toString())
+                    logger.error("ClientGrpc",
+                        "openConnect: $t"
+                    )
                     stopStream()
 
                     val e = parseError(t)
@@ -688,7 +763,9 @@ internal class ClientGrpc(
                 }
             })
         } catch (e: Exception) {
-            Log.e("Exception", e.message.toString())
+            logger.error("ClientGrpc",
+                "openConnect: Exception - ${e.message}"
+            )
         }
     }
 
@@ -711,7 +788,9 @@ internal class ClientGrpc(
     private fun parseUpdate(update: Update) {
         if (update.data.`is`(Response::class.java)) {
             val response = update.data.unpack(Response::class.java)
-            logger.debug("response", response.toString())
+            logger.debug("ClientGrpc",
+                "parseUpdate: Response - $response"
+            )
             response?.let {
                 grpcListeners.onResponse(it)
                 chatListener?.onResponse(it)
@@ -719,16 +798,22 @@ internal class ClientGrpc(
 
         } else if (update.data.`is`(Messages.UpdateNewMessage::class.java)) {
             val message = update.data.unpack(Messages.UpdateNewMessage::class.java)
-            logger.debug("UpdateNewMessage", message.toString())
+            logger.debug("ClientGrpc",
+                "parseUpdate: UpdateNewMessage - $message"
+            )
             message?.let {
                 chatListener?.onNewMessage(it)
             }
 
         } else if (update.data.`is`(UpdateDisconnect::class.java)) {
-            logger.debug("UpdateDisconnect", "Server closes connection...")
+            logger.debug("ClientGrpc",
+                "parseUpdate: UpdateDisconnect - server closes connection..."
+            )
 
         } else {
-            logger.debug("notImplementedEvent", update.toString())
+            logger.debug("ClientGrpc",
+                "parseUpdate: notImplementedEvent - $update"
+            )
         }
     }
 
@@ -786,7 +871,9 @@ internal class ClientGrpc(
 
     override fun onStart(methodName: String) {
         if (methodName != CustomerGrpc.getConnectMethod().bareMethodName) return
-        logger.debug("onStateChanged", "from = $connectState, to = ${ConnectState.Connecting}")
+        logger.debug("ClientGrpc",
+            "onStart: onStateChanged - from = $connectState, to = ${ConnectState.Connecting}"
+        )
         connectionListeners.onStateChanged(from = connectState, to = ConnectState.Connecting)
         connectState = ConnectState.Connecting
     }
@@ -794,7 +881,9 @@ internal class ClientGrpc(
 
     override fun onReady(methodName: String) {
         if (methodName != CustomerGrpc.getConnectMethod().bareMethodName) return
-        logger.debug("onStateChanged", "from = $connectState, to = ${ConnectState.Ready}")
+        logger.debug("ClientGrpc",
+            "onReady: onStateChanged - from = $connectState, to = ${ConnectState.Ready}"
+        )
         connectionListeners.onStateChanged(from = connectState, to = ConnectState.Ready)
         connectState = ConnectState.Ready
     }
@@ -808,7 +897,9 @@ internal class ClientGrpc(
             code = statusCode
         )
         val state = ConnectState.Disconnected(reason)
-        logger.debug("onStateChanged", "from = ${connectState}, to = $state")
+        logger.debug("ClientGrpc",
+            "onClose: onStateChanged - from = ${connectState}, to = $state"
+        )
         connectionListeners.onStateChanged(from = connectState, to = state)
         connectState = state
     }

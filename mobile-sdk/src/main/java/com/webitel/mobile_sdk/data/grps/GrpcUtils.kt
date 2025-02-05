@@ -1,6 +1,6 @@
 package com.webitel.mobile_sdk.data.grps
 
-import android.util.Log
+import com.webitel.mobile_sdk.data.portal.WebitelPortalClient.Companion.logger
 import io.grpc.ManagedChannel
 import java.util.concurrent.TimeUnit
 
@@ -29,7 +29,10 @@ internal object GrpcUtils {
                 shutdownManagedChannel(it.channel)
             }
         }catch (e: Exception) {
-            Log.e("closeAndOpenChannel", e.message.toString())
+            logger.error(
+                "GrpcUtils",
+                "closeAndOpenChannel: Exception - ${e.message}"
+            )
         }
 
         return getNewChannel(config)
@@ -57,10 +60,16 @@ internal object GrpcUtils {
             try {
                 managedChannel.shutdown()
                 if (!managedChannel.awaitTermination(1, TimeUnit.SECONDS)) {
-                    Log.e("awaitTermination", managedChannel.isShutdown.toString())
+                    logger.debug(
+                        "GrpcUtils",
+                        "awaitTermination: isShutdown - ${managedChannel.isShutdown}"
+                    )
                 }
             } catch (e: java.lang.Exception) {
-                Log.e("awaitTerminationEX", e.message.toString())
+                logger.error(
+                    "GrpcUtils",
+                    "shutdown: Exception - ${e.message}"
+                )
             }
         }
 
@@ -69,10 +78,16 @@ internal object GrpcUtils {
             try {
                 managedChannel.shutdownNow()
                 if (!managedChannel.awaitTermination(1, TimeUnit.SECONDS)) {
-                    Log.e("awaitTermination1", managedChannel.isShutdown.toString())
+                    logger.debug(
+                        "GrpcUtils",
+                        "awaitTermination: isShutdown - ${managedChannel.isShutdown}"
+                    )
                 }
             } catch (e: java.lang.Exception) {
-                Log.e("awaitTerminationEX", e.message.toString())
+                logger.error(
+                    "GrpcUtils",
+                    "shutdownNow: Exception - ${e.message}"
+                )
             }
         }
     }

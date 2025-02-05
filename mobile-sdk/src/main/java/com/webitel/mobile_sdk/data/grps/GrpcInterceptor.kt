@@ -42,8 +42,8 @@ internal class GrpcInterceptor(
                 listener?.onStart(method?.bareMethodName.toString())
 
                 WebitelPortalClient.logger.debug(
-                    "connect.start",
-                    "${method?.bareMethodName.toString()} - ${headers.toString()}"
+                    "GrpcInterceptor",
+                    "start: ${method?.bareMethodName.toString()} - ${headers.toString()}"
                 )
 
                 super.start(object : ForwardingClientCallListener.SimpleForwardingClientCallListener<RespT>(responseListener) {

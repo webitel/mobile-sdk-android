@@ -38,8 +38,6 @@ internal class FileUploader(val api: ChatApi) {
     private val maxChunkSize = 65536
     private val minChunkSize = 2048
 
-    //private var startUploadAt = 0.0
-
 
     /**
      * Uploads the given request. If another upload is in progress,
@@ -48,7 +46,7 @@ internal class FileUploader(val api: ChatApi) {
     @Synchronized
     fun upload(request: UploadRequest) {
         if (isUploading) {
-            logger.debug("upload", "request added to upload queue")
+            logger.debug("FileUploader", "upload: request added to upload queue")
             uploadQueue.add(request)
         } else {
             startUpload(request)
@@ -74,8 +72,8 @@ internal class FileUploader(val api: ChatApi) {
             }
             if (request == null) {
                 logger.warn(
-                    "Upload Cancel",
-                    "Cancellation failed - process not found, already canceled, or completed"
+                    "FileUploader",
+                    "cancel: cancellation failed - process not found, already canceled, or completed"
                 )
             }
         }
@@ -86,8 +84,9 @@ internal class FileUploader(val api: ChatApi) {
      * Starts the upload process for the given request.
      */
     private fun startUpload(request: UploadRequest) {
-        //startUploadAt = (System.currentTimeMillis() / 1000.0)
-        logger.debug("startUpload", "start upload file ${request.transferRequest.fileName}")
+        logger.debug("FileUploader",
+            "startUpload: start upload file ${request.transferRequest.fileName}"
+        )
         val process = UploadProcess(request)
         activeProcess = process
         isUploading = true
@@ -98,14 +97,16 @@ internal class FileUploader(val api: ChatApi) {
                 if (value == null) return
 
                 if (value.hasEnd()) {
-//                    val timeSpend = (System.currentTimeMillis() / 1000.0) - startUploadAt
-//                    logger.debug("timeSpend", "${timeSpend}")
-                    logger.debug("uploadFile", "stream completion received - $value")
+                    logger.debug("FileUploader",
+                        "startUpload: stream completion received - $value"
+                    )
                     return
                 }
 
                 if (value.hasStat()) {
-                    logger.debug("uploadFile", "File was uploaded - ${value.stat}")
+                    logger.debug("FileUploader",
+                        "startUpload: file was uploaded - ${value.stat}"
+                    )
                     activeChunksCount.set(0)
                     isUploading = false
                     chunkSize = minChunkSize
@@ -174,7 +175,9 @@ internal class FileUploader(val api: ChatApi) {
         process: UploadProcess
     ) {
         if (partSize > 0) {
-            logger.debug("handleChunkProgress", "Chunk of size $partSize uploaded successfully.")
+            logger.debug("FileUploader",
+                "handleChunkProgress: $partSize bytes uploaded successfully."
+            )
 
             if (activeChunksCount.get() > 0) {
                 // Decrement the count of active chunks since one chunk has been acknowledged.
@@ -214,11 +217,13 @@ internal class FileUploader(val api: ChatApi) {
         when (err.message) {
             cancel_file_transfer -> {
                 process.request.transferRequest.listener?.onCanceled()
-                logger.debug("sendFile", "File upload canceled")
+                logger.debug("FileUploader", "sendErrorEvent: file upload canceled")
             }
             else -> {
                 process.request.callback.onError(err)
-                logger.error("sendFile", "File upload error - ${err.message}")
+                logger.error("FileUploader",
+                    "sendErrorEvent: file upload error - ${err.message}"
+                )
             }
         }
     }
@@ -228,6 +233,9 @@ internal class FileUploader(val api: ChatApi) {
      * Cancels the active upload process.
      */
     private fun cancelActiveProcess(process: UploadProcess, cleanUp: Boolean) {
+        logger.debug("FileUploader",
+            "cancelActiveProcess: file - ${process.request.transferRequest.fileName}"
+        )
         activeChunksCount.set(0)
         isUploading = false
         isChunkSending = false
@@ -265,7 +273,9 @@ internal class FileUploader(val api: ChatApi) {
     private fun releaseNextRequest() {
         val nextRequest = uploadQueue.removeFirstOrNull()
         nextRequest?.let {
-            logger.debug("Next request to upload", "File: ${it.transferRequest.fileName}")
+            logger.debug("FileUploader",
+                "releaseNextRequest: file - ${it.transferRequest.fileName}"
+            )
             upload(it)
         }
     }
@@ -299,12 +309,16 @@ internal class FileUploader(val api: ChatApi) {
             }
 
             override fun onError(t: Throwable) {
-                logger.error("sendFile", "Kill upload error - ${parseError(t)}")
+                logger.error("FileUploader",
+                    "killUpload: Kill upload error - ${parseError(t)}"
+                )
             }
 
             override fun onCompleted() {
                 listener?.onCanceled()
-                logger.debug("sendFile", "Data on the server is cleared")
+                logger.debug("FileUploader",
+                    "killUpload: data on the server is cleared"
+                )
             }
 
             override fun beforeStart(requestStream: ClientCallStreamObserver<Media.UploadRequest>?) {
@@ -322,17 +336,17 @@ internal class FileUploader(val api: ChatApi) {
     private fun processQueue(process: UploadProcess) {
         if (!isUploading || activeChunksCount.get() > maxActiveChunks || isChunkSending) {
             logger.debug(
-                "Chunk Upload",
-                "Cannot start sending chunks - Uploading: $isUploading, " +
-                        "Active chunks: ${activeChunksCount.get()}/$maxActiveChunks, Chunk sending: $isChunkSending"
+                "FileUploader",
+                "processQueue: cannot start sending chunks - uploading: $isUploading, " +
+                        "active chunks: ${activeChunksCount.get()}/$maxActiveChunks, chunk sending: $isChunkSending"
             )
             return
         }
-        sandChunk(process)
+        sendChunk(process)
     }
 
 
-    private fun sandChunk(process: UploadProcess) {
+    private fun sendChunk(process: UploadProcess) {
         if (activeChunksCount.get() > maxActiveChunks) {
             return
         }
@@ -343,8 +357,8 @@ internal class FileUploader(val api: ChatApi) {
             while (process.request.transferRequest.stream.read(data).also { length = it } > 0) {
                 isChunkSending = true
                 logger.debug(
-                    "Chunk Upload",
-                    "Chunk size: $length bytes, Active: ${activeChunksCount.get()}"
+                    "FileUploader",
+                    "sendChunk: size - $length bytes, active - ${activeChunksCount.get()}"
                 )
 
                 val chunk = Media.UploadRequest.newBuilder()
@@ -360,8 +374,8 @@ internal class FileUploader(val api: ChatApi) {
 
                 if (chunkSize != currentSize) {
                     logger.debug(
-                        "Chunk Upload",
-                        "currentSize - $currentSize; chunkSize: ${chunkSize}"
+                        "FileUploader",
+                        "sendChunk: changed chunk size from - $currentSize; to - $chunkSize"
                     )
                     currentSize = chunkSize
                     data = ByteArray(currentSize)
@@ -375,6 +389,8 @@ internal class FileUploader(val api: ChatApi) {
             finalizeSendingIfNeeded(process)
 
         } catch (e: Exception) {
+            logger.error("FileUploader", "sendChunk: received exception - ${e.message}")
+            logger.error("FileUploader", e.stackTraceToString())
             handleUploadError(e, process)
             process.getStream()?.cancel(e.message, e)
         }
@@ -386,7 +402,7 @@ internal class FileUploader(val api: ChatApi) {
      */
     private fun finalizeSendingIfNeeded(process: UploadProcess) {
         if (isUploading && process.request.transferRequest.stream.available() == 0) {
-            logger.debug("sendFile", "All bytes sent to stream")
+            logger.debug("FileUploader", "finalizeSending: all bytes sent to stream")
             isUploading = false
             isChunkSending = false
             chunkSize = minChunkSize
@@ -412,15 +428,15 @@ internal class FileUploader(val api: ChatApi) {
         if (elapsedTime < targetTime && chunkSize < maxChunkSize) {
             val x = 1.1
             logger.debug(
-                "Adjust Size",
-                "Chunk size adjustment: factor = $x, elapsed time = $elapsedTime"
+                "FileUploader",
+                "adjustChunkSize: factor = $x, elapsed time = $elapsedTime"
             )
             chunkSize = minOf((chunkSize * x).toInt(), maxChunkSize)
         } else if (elapsedTime > targetTime && chunkSize > minChunkSize) {
             val x = 0.9
             logger.debug(
-                "Adjust Size",
-                "Chunk size adjustment: factor = $x, elapsed time = $elapsedTime"
+                "FileUploader",
+                "adjustChunkSize: factor = $x, elapsed time = $elapsedTime"
             )
             chunkSize = maxOf((chunkSize * x).toInt(), minChunkSize)
         }

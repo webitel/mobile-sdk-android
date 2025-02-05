@@ -1,6 +1,5 @@
 package com.webitel.mobile_sdk.data.auth
 
-import android.util.Log
 import com.google.protobuf.Any
 import com.webitel.mobile_sdk.data.auth.storage.AuthStorage
 import com.webitel.mobile_sdk.data.grps.AuthApi
@@ -9,6 +8,7 @@ import com.webitel.mobile_sdk.data.grps.`is`
 import com.webitel.mobile_sdk.data.grps.pack
 import com.webitel.mobile_sdk.data.grps.unpack
 import com.webitel.mobile_sdk.data.portal.UserSession
+import com.webitel.mobile_sdk.data.portal.WebitelPortalClient.Companion.logger
 import com.webitel.mobile_sdk.domain.Member
 import com.webitel.mobile_sdk.domain.User
 import com.webitel.mobile_sdk.domain.CallbackListener
@@ -157,9 +157,8 @@ internal class AuthRepository(
             ?: return
 
         if (!response.err.message.isNullOrEmpty()) {
-            Log.e(
-                "onResponse",
-                "${response.err.message}; code - ${response.err.code}"
+            logger.warn("AuthRepository",
+                "onResponse: ${response.err.message}; code - ${response.err.code}"
             )
             request.onError(
                 Error(
@@ -212,14 +211,34 @@ internal class AuthRepository(
                             chatAccount
                         )
                     )
-                }catch (_: Exception){}
+                }catch (e: Exception){
+                    logger.error("AuthRepository",
+                        "onResponse: AccessToken - ${e.message}"
+                    )
+                    request.onError(
+                        Error(
+                            message = e.message.toString(),
+                            code = Code.UNKNOWN
+                        )
+                    )
+                }
             } else if (response.data.`is`(RegisterDeviceResponse::class.java)) {
                 try {
                     request as CallbackListener<RegisterResult>
                     request.onSuccess(
                         RegisterResult()
                     )
-                }catch (_: Exception){}
+                }catch (e: Exception){
+                    logger.error("AuthRepository",
+                        "onResponse: RegisterDeviceResponse - ${e.message}"
+                    )
+                    request.onError(
+                        Error(
+                            message = e.message.toString(),
+                            code = Code.UNKNOWN
+                        )
+                    )
+                }
             } else {
                 request.onError(
                     Error(

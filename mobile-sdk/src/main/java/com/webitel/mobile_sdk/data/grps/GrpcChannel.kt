@@ -19,7 +19,7 @@ internal class GrpcChannel(
         )
         channel = ManagedChannelBuilder
             .forAddress(
-                config.host, // "dev.webitel.com",
+                config.host, // "demo.webitel.com",
                 config.port // 443
             )
             .keepAliveWithoutCalls(false)
