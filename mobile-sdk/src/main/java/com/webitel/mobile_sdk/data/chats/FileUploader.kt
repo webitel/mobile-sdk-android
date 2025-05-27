@@ -126,6 +126,9 @@ internal class FileUploader(val api: ChatApi) {
 
                 } else {
                     if (value.part.pid.isNotEmpty()) {
+                        logger.debug("FileUploader",
+                            "startUpload: pid - ${value.part.pid}"
+                        )
                         request.transferRequest.listener?.onStarted(value.part.pid)
                         process.setPid(value.part.pid)
 

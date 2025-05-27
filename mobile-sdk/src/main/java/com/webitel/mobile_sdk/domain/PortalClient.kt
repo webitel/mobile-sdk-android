@@ -12,17 +12,19 @@ import com.webitel.mobile_sdk.data.LibraryModule
 interface PortalClient {
 
     /**
-     * Fetches a ChatClient instance.
-     * @param callback The callback that will handle the response with the ChatClient object.
+     * Provides access to the ChatClient instance without performing an authorization check.
+     * Use this property if you are handling authorization separately.
      */
-    fun getChatClient(callback: CallbackListener<ChatClient>)
+    val chatClient: ChatClient
 
 
     /**
-     * Fetches a VoiceClient instance.
-     * @param callback The callback that will handle the response with the VoiceClient object.
+     * Asynchronously returns the ChatClient instance after checking user authorization.
+     * If the user is authorized, the ChatClient is returned. Otherwise, a UNAUTHENTICATED error is returned.
+     *
+     * @param callback The callback that receives the ChatClient instance or an authorization error.
      */
-    fun getVoiceClient(callback: CallbackListener<VoiceClient>)
+    fun getChatClient(callback: CallbackListener<ChatClient>)
 
 
     /**

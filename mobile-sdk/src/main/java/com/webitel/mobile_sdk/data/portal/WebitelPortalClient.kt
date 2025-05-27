@@ -2,8 +2,6 @@ package com.webitel.mobile_sdk.data.portal
 
 import android.net.Uri
 import com.webitel.mobile_sdk.data.auth.AuthRepository
-import com.webitel.mobile_sdk.data.auth.storage.AuthStorageSharedPref
-import com.webitel.mobile_sdk.data.calls.WebitelVoice
 import com.webitel.mobile_sdk.data.chats.WebitelChat
 import com.webitel.mobile_sdk.data.grps.ChannelConfig
 import com.webitel.mobile_sdk.data.grps.ClientGrpc
@@ -17,7 +15,6 @@ import com.webitel.mobile_sdk.domain.ConnectListener
 import com.webitel.mobile_sdk.domain.ConnectState
 import com.webitel.mobile_sdk.domain.Error
 import com.webitel.mobile_sdk.domain.LoginListener
-import com.webitel.mobile_sdk.domain.VoiceClient
 import com.webitel.mobile_sdk.domain.PortalClient
 import com.webitel.mobile_sdk.domain.RegisterResult
 import com.webitel.mobile_sdk.domain.Session
@@ -36,7 +33,6 @@ internal class WebitelPortalClient(
 
     private val grpc: ClientGrpc
     private val chat: WebitelChat
-    private val voice: VoiceClient
 
     private var userSession: UserSession? = null
 
@@ -45,11 +41,13 @@ internal class WebitelPortalClient(
     }
 
 
-    init {
-        val session: () -> UserSession? = {
-            userSession
+    override val chatClient: ChatClient
+        get() {
+            return chat
         }
 
+
+    init {
         logger.level = client.logLevel
 
         grpc = ClientGrpc(
@@ -58,14 +56,8 @@ internal class WebitelPortalClient(
         )
 
         chat = WebitelChat(grpc, logger)
-        voice = WebitelVoice(grpc)
 
-        authRepository = AuthRepository(
-            AuthStorageSharedPref(client.application),
-            grpc
-        )
-
-        setupUser()
+        authRepository = AuthRepository(grpc)
 
         grpc.setChatListener(chat)
         grpc.addListener(authRepository)
@@ -80,32 +72,6 @@ internal class WebitelPortalClient(
                 else callback.onError(
                     Error(
                         "Chat is not enabled in this service",
-                        Code.UNIMPLEMENTED
-                    )
-                )
-            }
-
-            override fun onError(e: Error) {
-                callback.onError(e)
-            }
-        })
-    }
-
-
-    override fun getVoiceClient(callback: CallbackListener<VoiceClient>) {
-
-        if (voice.activeCall != null) {
-            callback.onSuccess(voice)
-            return
-        }
-
-        authRepository.getSession(object : CallbackListener<UserSession> {
-            override fun onSuccess(t: UserSession) {
-                userSession = t
-                if (t.isVoiceAvailable) callback.onSuccess(voice)
-                else callback.onError(
-                    Error(
-                        "Calls is not enabled in this service",
                         Code.UNIMPLEMENTED
                     )
                 )
@@ -204,14 +170,6 @@ internal class WebitelPortalClient(
 
     override fun closeConnect() {
         grpc.closeConnection()
-    }
-
-
-    private fun setupUser() {
-        val t = authRepository.getToken()
-        if (t != null) {
-            grpc.setAccessToken(t.token)
-        }
     }
 
 

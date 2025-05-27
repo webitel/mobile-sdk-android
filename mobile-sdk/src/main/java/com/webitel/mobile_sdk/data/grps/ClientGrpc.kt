@@ -3,13 +3,10 @@ package com.webitel.mobile_sdk.data.grps
 import android.os.Handler
 import android.os.HandlerThread
 import android.os.Process
-import android.util.Log
 import com.google.protobuf.Any
 import com.google.protobuf.ByteString
 import com.webitel.mobile_sdk.data.auth.AccessToken
 import com.webitel.mobile_sdk.data.auth.LoginResponse
-import com.webitel.mobile_sdk.data.calls.VoiceApi
-import com.webitel.mobile_sdk.data.calls.sip.SipConfig
 import com.webitel.mobile_sdk.data.portal.UserSession
 import com.webitel.mobile_sdk.data.portal.WLogger
 import com.webitel.mobile_sdk.domain.Member
@@ -49,7 +46,7 @@ import java.util.TimerTask
 internal class ClientGrpc(
     private val config: ChannelConfig,
     private val logger: WLogger
-) : ChatApi, AuthApi, VoiceApi, StreamListener {
+) : ChatApi, AuthApi, StreamListener {
 
     private var chatListener: GrpcChatMessageListener? = null
     private var requestObserver: StreamObserver<Request>? = null
@@ -383,67 +380,6 @@ internal class ClientGrpc(
     }
 
 
-    override fun getSipConfig(callback: CallbackListener<SipConfig>) {
-        try {
-            resetBackoff()
-            val stub = CustomerGrpc.newStub(channel.channel)
-            val m = CustomerOuterClass.InspectRequest
-                .newBuilder()
-                .build()
-
-            stub.inspect(m, object : StreamObserver<Auth.AccessToken> {
-
-                override fun onNext(value: Auth.AccessToken?) {
-                    val sip = value?.call
-                    if (sip != null) {
-
-                        val password = if (sip.secret.isNullOrEmpty())
-                            channel.getAccessToken()
-                        else sip.secret
-
-                        val s = SipConfig(
-                            auth = channel.getDeviceId(),
-                            domain = sip.realm,
-                            extension = sip.userId,
-                            password = password,
-                            proxy = sip.proxy
-                        )
-                        logger.debug("ClientGrpc",
-                            "getSipConfig: success"
-                        )
-                        callback.onSuccess(s)
-                    } else {
-                        logger.error("ClientGrpc",
-                            "getSipConfig: SIP Config not found"
-                        )
-                        callback.onError(
-                            Error(
-                                "SIP Config not found",
-                                code = Code.DATA_LOSS
-                            )
-                        )
-                    }
-                }
-
-                override fun onError(t: Throwable) {
-                    logger.error("ClientGrpc",
-                        "getSipConfig: onError - ${t.message.toString()}"
-                    )
-                    callback.onError(parseError(t))
-                }
-
-                override fun onCompleted() {}
-            })
-
-        } catch (e: Exception) {
-            logger.error("ClientGrpc",
-                "getSipConfig: Exception - ${e.message}"
-            )
-            callback.onError(parseError(e))
-        }
-    }
-
-
     override fun uploadFile(
         streamObserver: StreamObserver<MessageOuterClass.File>
     ): StreamObserver<Media.UploadMedia> {
@@ -723,7 +659,6 @@ internal class ClientGrpc(
         return UserSession(
             user = user,
             isChatAvailable = value.scopeList.contains("chat"),
-            isVoiceAvailable = value.scopeList.contains("call"),
             chatAccount
         )
     }

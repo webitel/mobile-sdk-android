@@ -8,6 +8,5 @@ import com.webitel.mobile_sdk.domain.Session
 internal class UserSession(
     override val user: User,
     override val isChatAvailable: Boolean,
-    override val isVoiceAvailable: Boolean,
     val chatAccount: Member?
 ) : Session

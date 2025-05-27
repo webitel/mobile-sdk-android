@@ -1,5 +1,5 @@
 
-# Webitel Android SDK
+# Webitel Chat SDK Android
 
 ---
 
@@ -96,7 +96,7 @@ PortalClient portalClient = new PortalClient.Builder(
 ```java
 User user = new User.Builder(  
 	"https://demo.webitel.com/portal",
-	"asfshdhfewfrwefsdfsdfnjnoiinonjnhu", 
+	"asfshdhfewfrwefsdfsdf...", 
 	"John McClane"
 )  
 	.locale("en-US")  
@@ -257,27 +257,19 @@ portal.closeConnect();
 
 ## Работа с чатами
 
-Для взаимодействия с чатами в SDK необходимо получить объект клиента чатов — `ChatClient`. Это делается с помощью метода `getChatClient`.
+Основной способ взаимодействия с чатами — через свойство `portal.chatClient`.
 
-### Получение клиента чатов
+Оно предоставляет прямой доступ к экземпляру `ChatClient` без предварительной проверки авторизации.
+Все методы `ChatClient` доступны и могут быть вызваны в любой момент.
+Если пользователь не авторизован, при выполнении вызова будет возвращена ошибка `UNAUTHENTICATED`.
 
-```java
-portal.getChatClient(new CallbackListener<ChatClient>() {  
-	@Override  
-	public void onError(@NonNull Error error) {  
-		// получили ошибку 
-	}  
-	  
-	@Override  
-	public void onSuccess(ChatClient chatClient) {  
-		chatClient = t
-		// получили и сохранили СhatClient для дальнейшей работы с ним
-	}  
-});
-```
+Метод `getChatClient()` доступен как вспомогательный инструмент для первичной проверки авторизации.
+Он может быть полезен, если нужно убедиться, что пользователь уже авторизован и что чаты доступны.
+Однако стоит учитывать, что авторизационная сессия может завершиться в любой момент,
+поэтому даже после успешного получения `ChatClient` через этот метод, вызовы его функций впоследствии всё равно могут вернуть ошибку `UNAUTHENTICATED`.
 
-После успешного получения объекта ChatClient его нужно сохранить (например, в поле
-класса) для дальнейшей работы с чатами.
+Рекомендуется сохранять полученный экземпляр `ChatClient` (независимо от способа получения) в поле класса, чтобы использовать его повторно.
+
 
 **Функциональность `ChatClient`**
 
@@ -658,7 +650,7 @@ sealed class Button {
 
 **Определение типа кнопки**
 
-Для определения типа кнопки и извлечения данных из неё можно использовать `when`:
+Для определения типа кнопки и извлечения данных из неё можно использовать:
 
 ```java
 if (button instanceof Button.Url) {

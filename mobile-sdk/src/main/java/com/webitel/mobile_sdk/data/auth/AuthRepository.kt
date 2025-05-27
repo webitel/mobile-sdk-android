@@ -1,7 +1,6 @@
 package com.webitel.mobile_sdk.data.auth
 
 import com.google.protobuf.Any
-import com.webitel.mobile_sdk.data.auth.storage.AuthStorage
 import com.webitel.mobile_sdk.data.grps.AuthApi
 import com.webitel.mobile_sdk.data.grps.GrpcListener
 import com.webitel.mobile_sdk.data.grps.`is`
@@ -28,16 +27,10 @@ import java.util.UUID
 
 
 internal class AuthRepository(
-    private val storage: AuthStorage,
     private val authApi: AuthApi
 ) : GrpcListener {
 
     private val requests: HashMap<String, CallbackListener<*>> = hashMapOf()
-
-
-    fun getToken(): AccessToken? {
-        return storage.getAccessToken()
-    }
 
 
     @Synchronized
@@ -57,7 +50,6 @@ internal class AuthRepository(
 
             authApi.login(appToken, identity, object : CallbackListener<LoginResponse> {
                 override fun onSuccess(t: LoginResponse) {
-                    storage.saveAccessToken(t.token)
                     callback.onSuccess(t.session)
                 }
 
@@ -81,7 +73,6 @@ internal class AuthRepository(
     fun logout(callback: LoginListener) {
         authApi.logout(object : CallbackListener<Unit> {
             override fun onSuccess(t: Unit) {
-                destroy()
                 callback.onLogoutFinished()
             }
 
@@ -147,11 +138,6 @@ internal class AuthRepository(
     }
 
 
-    private fun destroy() {
-        storage.clear()
-    }
-
-
     override fun onResponse(response: Connect.Response) {
         val request = requests.remove(response.id)
             ?: return
@@ -207,7 +193,6 @@ internal class AuthRepository(
                         UserSession(
                             user = user,
                             isChatAvailable = s.scopeList.contains("chat"),
-                            isVoiceAvailable = s.scopeList.contains("call"),
                             chatAccount
                         )
                     )

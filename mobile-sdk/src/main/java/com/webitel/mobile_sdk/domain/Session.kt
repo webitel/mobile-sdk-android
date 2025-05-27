@@ -19,11 +19,4 @@ interface Session {
      * @return Boolean value - `true` if chat is available, `false` otherwise.
      */
     val isChatAvailable: Boolean
-
-
-    /**
-     * Indicates whether the voice feature is available in the current session.
-     * @return Boolean value - `true` if voice communication is available, `false` otherwise.
-     */
-    val isVoiceAvailable: Boolean
 }
