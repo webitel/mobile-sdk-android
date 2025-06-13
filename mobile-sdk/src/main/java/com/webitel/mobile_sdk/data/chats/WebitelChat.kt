@@ -125,6 +125,9 @@ internal class WebitelChat(
             .newBuilder()
             .setPeer(peer)
 
+        if (!options.kind.isNullOrEmpty())
+            messageRequest.setKind(options.kind)
+
         if (!options.text.isNullOrEmpty())
             messageRequest.setText(options.text)
 
@@ -589,6 +592,7 @@ internal class WebitelChat(
                                 isIncoming = !isCurrentMember(m),
                                 id = it.id,
                                 sentAt = it.date,
+                                kind = it.kind,
                                 postback = if (it.hasPostback()) toPostback(it.postback) else null,
                                 replyMarkup = if (it.hasKeyboard()) toKeyboard(it.keyboard) else null
                             )
@@ -761,6 +765,7 @@ internal class WebitelChat(
             isIncoming = !isCurrentMember(m),
             sentAt = message.date,
             id = message.id,
+            kind = message.kind,
             postback = if (message.hasPostback()) toPostback(message.postback) else null,
             replyMarkup = if (message.hasKeyboard()) toKeyboard(message.keyboard) else null
         )

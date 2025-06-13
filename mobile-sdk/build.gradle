@@ -108,7 +108,7 @@ afterEvaluate {
 
             groupId = "com.webitel"
             artifactId = "mobile-sdk"
-            version = "0.17.1"
+            version = "0.18.1"
         }
     }
 }

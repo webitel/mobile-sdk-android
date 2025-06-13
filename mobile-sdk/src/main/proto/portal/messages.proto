@@ -125,6 +125,10 @@ message SendMessageRequest {
   // portal "Service" (bot) chat dialog.
   webitel.chat.Peer peer = 1;
 
+  // Kind of the message. Custom type classifier. Optional. Default: empty.
+  // May be used by the client's UI to extend set of general message.type(s): [ text | file ]
+  string kind = 6;
+
   // Media file uploaded.
   // Not implemented yet.
   webitel.chat.File file = 2;

@@ -14,6 +14,7 @@ internal class WebitelMessage(
     override val isIncoming: Boolean,
     override val id: Long,
     override val sentAt: Long,
+    override val kind: String,
     override val postback: Message.Postback?,
-    override val replyMarkup: ReplyMarkup?,
+    override val replyMarkup: ReplyMarkup?
 ): Message

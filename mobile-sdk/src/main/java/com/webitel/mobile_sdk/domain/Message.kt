@@ -56,6 +56,19 @@ interface Message {
 
 
     /**
+     * Optional custom message type classifier. Default: empty string.
+     *
+     * May be used by the client UI to extend the standard set of message types
+     * (e.g., "text", "file") with custom system or service-specific types.
+     *
+     * Examples:
+     * - "queue_update"
+     * - "system_alert"
+     */
+    val kind: String
+
+
+    /**
      * Represents the postback, which occurs when a reply button is clicked.
      * This is used for handling button click actions within the message.
      * This can be null if the message does not have a postback associated with it.
@@ -84,12 +97,27 @@ interface Message {
         internal var file: File? = null
             private set
 
+        internal var kind: String? = null
+            private set
+
 
         /**
          * Sets the send ID for the message.
          * This is used for tracking and identifying the message request.
          */
         fun sendId(id: String) = apply { this.sendId = id }
+
+
+        /**
+         * Sets a custom type classifier for the message.
+         *
+         * Allows extending standard types (like "text" or "file") with custom
+         * UI-specific or system-level classifications.
+         *
+         * @param kind the custom type string (e.g., "system_alert", "queue_update")
+         * @return the updated message options.
+         */
+        fun kind(kind: String) = apply { this.kind = kind }
 
 
         /**
