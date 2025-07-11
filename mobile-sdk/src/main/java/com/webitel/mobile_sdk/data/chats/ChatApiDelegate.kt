@@ -22,6 +22,7 @@ internal interface ChatApiDelegate {
         dialog: WebitelDialog,
         offset: Long,
         limit: Int,
+        excludeKinds: List<String>,
         callback: CallbackListener<List<Message>>
     )
 
@@ -31,6 +32,7 @@ internal interface ChatApiDelegate {
         offsetId: Long,
         limit: Int,
         offsetDate: Long,
+        excludeKinds: List<String>,
         callback: CallbackListener<List<Message>>
     )
 

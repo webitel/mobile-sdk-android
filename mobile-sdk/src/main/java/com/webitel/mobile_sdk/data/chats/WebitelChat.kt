@@ -29,6 +29,7 @@ import io.grpc.StatusRuntimeException
 import io.grpc.stub.ClientCallStreamObserver
 import io.grpc.stub.ClientResponseObserver
 import io.grpc.stub.StreamObserver
+import webitel.chat.History
 import webitel.chat.History.ChatMessages
 import webitel.chat.History.ChatMessagesRequest
 import webitel.chat.MessageOuterClass
@@ -350,6 +351,7 @@ internal class WebitelChat(
         dialog: WebitelDialog,
         offset: Long,
         limit: Int,
+        excludeKinds: List<String>,
         callback: CallbackListener<List<Message>>
     ) {
 
@@ -362,12 +364,15 @@ internal class WebitelChat(
                     .setId(offset)
                     .build()
             )
-            .build()
+
+        if (excludeKinds.isNotEmpty()) {
+            r.exclude = buildMessageFilter(excludeKinds)
+        }
 
         val request = Connect.Request.newBuilder()
             .setId(UUID.randomUUID().toString())
             .setPath(ChatMessagesGrpc.getChatHistoryMethod().bareMethodName)
-            .setData(Any.newBuilder().pack(r))
+            .setData(Any.newBuilder().pack(r.build()))
             .build()
 
         val mc = CacheRequests.HistoryRequestCache(
@@ -388,6 +393,7 @@ internal class WebitelChat(
         offsetId: Long,
         limit: Int,
         offsetDate: Long,
+        excludeKinds: List<String>,
         callback: CallbackListener<List<Message>>
     ) {
         val r = ChatMessagesRequest.newBuilder()
@@ -399,12 +405,15 @@ internal class WebitelChat(
                     offsetDate = offsetDate
                 )
             )
-            .build()
+
+        if (excludeKinds.isNotEmpty()) {
+            r.exclude = buildMessageFilter(excludeKinds)
+        }
 
         val request = Connect.Request.newBuilder()
             .setId(UUID.randomUUID().toString())
             .setPath(ChatMessagesGrpc.getChatUpdatesMethod().bareMethodName)
-            .setData(Any.newBuilder().pack(r))
+            .setData(Any.newBuilder().pack(r.build()))
             .build()
 
         val mc = CacheRequests.HistoryRequestCache(
@@ -465,6 +474,13 @@ internal class WebitelChat(
                 .setDate(offsetDate)
                 .build()
         }
+    }
+
+
+    private fun buildMessageFilter(excludeKinds: List<String>): History.FilterMessageExclude {
+        return History.FilterMessageExclude.newBuilder()
+            .addAllKind(excludeKinds)
+            .build()
     }
 
 

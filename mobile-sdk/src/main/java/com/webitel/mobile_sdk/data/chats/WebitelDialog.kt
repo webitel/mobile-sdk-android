@@ -27,23 +27,23 @@ internal class WebitelDialog(
     private val listeners: DialogListeners = DialogListeners()
 
     override fun getHistory(request: HistoryRequest, callback: CallbackListener<List<Message>>) {
-        apiDelegate.getHistory(this, request.offset ?: 0, request.limit, callback)
+        apiDelegate.getHistory(this, request.offset ?: 0, request.limit, request.excludeKinds, callback)
     }
 
 
     override fun getHistory(callback: CallbackListener<List<Message>>) {
-        apiDelegate.getHistory(this, 0, 50, callback)
+        apiDelegate.getHistory(this, 0, 50, emptyList(), callback)
     }
 
 
     override fun getUpdates(request: HistoryRequest, callback: CallbackListener<List<Message>>) {
         val offset = request.offset ?: lastMessage?.id ?: 0
-        apiDelegate.getUpdates(this, offset, request.limit, join, callback)
+        apiDelegate.getUpdates(this, offset, request.limit, join, request.excludeKinds, callback)
     }
 
 
     override fun getUpdates(callback: CallbackListener<List<Message>>) {
-        apiDelegate.getUpdates(this, lastMessage?.id ?: 0, 50, join, callback)
+        apiDelegate.getUpdates(this, lastMessage?.id ?: 0, 50, join, emptyList(), callback)
     }
 
 

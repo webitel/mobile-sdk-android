@@ -46,4 +46,12 @@ message ChatMessagesRequest {
     // Unique peer contact
     Peer peer = 7;
   }
+
+  // Exclude messages filter options
+  FilterMessageExclude exclude = 11;
+}
+
+message FilterMessageExclude {
+  // Kind of messages to exclude from results
+  repeated string kind = 1;
 }
