@@ -3,9 +3,7 @@ package com.webitel.mobile_sdk.data.auth
 import com.google.protobuf.Any
 import com.webitel.mobile_sdk.data.grps.AuthApi
 import com.webitel.mobile_sdk.data.grps.GrpcListener
-import com.webitel.mobile_sdk.data.grps.`is`
 import com.webitel.mobile_sdk.data.grps.pack
-import com.webitel.mobile_sdk.data.grps.unpack
 import com.webitel.mobile_sdk.data.portal.UserSession
 import com.webitel.mobile_sdk.data.portal.WebitelPortalClient.Companion.logger
 import com.webitel.mobile_sdk.domain.Member
@@ -22,6 +20,7 @@ import webitel.portal.CustomerGrpc
 import webitel.portal.CustomerOuterClass.InspectRequest
 import webitel.portal.CustomerOuterClass.RegisterDeviceRequest
 import webitel.portal.CustomerOuterClass.RegisterDeviceResponse
+import webitel.portal.Messages
 import webitel.portal.Push.DevicePush
 import java.util.UUID
 
@@ -235,6 +234,7 @@ internal class AuthRepository(
         }
     }
 
+    override fun onNewMessage(message: Messages.UpdateNewMessage) {}
 
     override fun onConnectionError(e: Error) {
         requests.forEach {

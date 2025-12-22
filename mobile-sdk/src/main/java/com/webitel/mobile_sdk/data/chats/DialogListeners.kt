@@ -1,5 +1,6 @@
 package com.webitel.mobile_sdk.data.chats
 
+import com.webitel.mobile_sdk.data.portal.WebitelPortalClient.Companion.logger
 import com.webitel.mobile_sdk.domain.DialogListener
 import com.webitel.mobile_sdk.domain.Member
 import com.webitel.mobile_sdk.domain.Message
@@ -25,7 +26,7 @@ internal class DialogListeners {
 
     fun onMessageAdded(message: Message) {
         listeners.forEach {
-            it.onMessageAdded(message)
+            safeListenerCall { it.onMessageAdded(message) }
         }
     }
 
@@ -59,5 +60,18 @@ internal class DialogListeners {
 
     fun removeAllListeners() {
         listeners.clear()
+    }
+
+    private inline fun safeListenerCall(
+        action: () -> Unit
+    ) {
+        try {
+            action()
+        } catch (e: Throwable) {
+            val stackTrace = e.stackTraceToString()
+            logger.error("DialogListeners",
+                "safeListenerCall: Unhandled exception in client listener\n$stackTrace"
+            )
+        }
     }
 }

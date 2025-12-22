@@ -146,6 +146,7 @@ interface PortalClient {
 
         internal var keepAliveTime: Long = 10
         internal var keepAliveTimeout: Long = 10
+        internal var transport: Transport = Transport.GRPC
 
 
         /**
@@ -203,6 +204,30 @@ interface PortalClient {
          * @param seconds The time in seconds to wait for a read activity after sending a keepalive ping.
          */
         fun keepAliveTimeout(seconds: Long) = apply { this.keepAliveTimeout = seconds }
+
+
+        /**
+         * Sets the client transport.
+         *
+         * Defaults to gRPC if not specified.
+         *
+         * @param transport the transport to use
+         */
+        fun transport(transport: Transport) = apply {
+            this.transport = transport
+        }
+
+
+        /**
+         * Switches transport to WebSocket.
+         *
+         * By default, the client uses gRPC transport.
+         * When enabled, all incoming and outgoing notifications
+         * are handled via a WebSocket connection.
+         */
+        fun useWebSocket() = apply {
+            this.transport = Transport.WEBSOCKET
+        }
 
 
         /**

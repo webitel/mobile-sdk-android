@@ -2,11 +2,10 @@ package com.webitel.mobile_sdk.data.chats
 
 import com.google.protobuf.Any
 import com.webitel.mobile_sdk.data.grps.ChatApi
-import com.webitel.mobile_sdk.data.grps.GrpcChatMessageListener
-import com.webitel.mobile_sdk.data.grps.`is`
+import com.webitel.mobile_sdk.data.grps.GrpcListener
 import com.webitel.mobile_sdk.data.grps.pack
-import com.webitel.mobile_sdk.data.grps.unpack
 import com.webitel.mobile_sdk.data.portal.WLogger
+import com.webitel.mobile_sdk.data.wss.FileDownloaderHttp
 import com.webitel.mobile_sdk.domain.Button
 import com.webitel.mobile_sdk.domain.ButtonRow
 import com.webitel.mobile_sdk.domain.CallbackListener
@@ -48,11 +47,12 @@ const val cancel_file_transfer = "cancel_file_transfer"
 internal class WebitelChat(
     private val chatApi: ChatApi,
     private val logger: WLogger,
+    private val uploader: FileUploader,
+    private val fileDownloaderHttp: FileDownloaderHttp?,
     private val cacheRequests: CacheRequests = CacheRequests()
-) : ChatClient, GrpcChatMessageListener, ChatApiDelegate {
+) : ChatClient, GrpcListener, ChatApiDelegate {
 
     private val dialogs: ArrayList<WebitelDialog> = arrayListOf()
-    private val uploader = FileUploader(chatApi)
 
 
     override fun getServiceDialog(callback: CallbackListener<Dialog>) {
@@ -197,6 +197,7 @@ internal class WebitelChat(
     }
 
 
+    @Deprecated("Deprecated in public interface")
     override fun downloadFile(
         dialog: WebitelDialog,
         fileId: String,
@@ -233,6 +234,13 @@ internal class WebitelChat(
         offset: Long,
         listener: DownloadListener
     ): CancellationToken {
+        if (fileDownloaderHttp != null) {
+            val id = UUID.randomUUID().toString()
+            return fileDownloaderHttp.download(
+                DownloadRequest(id, dialog, fileId, offset , listener)
+            )
+        }
+
         var isCompleted = false
         var request: ClientCallStreamObserver<Media.GetFileRequest>? = null
 
@@ -342,8 +350,9 @@ internal class WebitelChat(
 
         if (!chatApi.isStateReady()) {
             chatApi.openConnection()
+        } else {
+            sendNextMessageFromQueue()
         }
-        sendNextMessageFromQueue()
     }
 
 
@@ -383,8 +392,9 @@ internal class WebitelChat(
 
         if (!chatApi.isStateReady()) {
             chatApi.openConnection()
+        } else {
+            sendRequests()
         }
-        sendRequests()
     }
 
 
@@ -424,8 +434,9 @@ internal class WebitelChat(
 
         if (!chatApi.isStateReady()) {
             chatApi.openConnection()
+        } else {
+            sendRequests()
         }
-        sendRequests()
     }
 
 
@@ -502,8 +513,9 @@ internal class WebitelChat(
 
         if (!chatApi.isStateReady()) {
             chatApi.openConnection()
+        } else {
+            sendRequests()
         }
-        sendRequests()
     }
 
 

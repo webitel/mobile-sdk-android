@@ -40,15 +40,12 @@ import webitel.portal.MediaStorageGrpc
 import webitel.portal.Messages
 import webitel.portal.Push
 import java.util.Timer
-import java.util.TimerTask
 
 
 internal class ClientGrpc(
     private val config: ChannelConfig,
     private val logger: WLogger
 ) : ChatApi, AuthApi, StreamListener {
-
-    private var chatListener: GrpcChatMessageListener? = null
     private var requestObserver: StreamObserver<Request>? = null
     private var timer: Timer? = null
     private lateinit var channel: GrpcChannel
@@ -73,12 +70,17 @@ internal class ClientGrpc(
     }
 
 
-    fun addConnectListener(listener: ConnectListener) {
+    override fun getConnectState(): ConnectState {
+        return connectState
+    }
+
+
+    override fun addConnectListener(listener: ConnectListener) {
         connectionListeners.addListener(listener)
     }
 
 
-    fun removeConnectListener(listener: ConnectListener) {
+    override fun removeConnectListener(listener: ConnectListener) {
         connectionListeners.removeListener(listener)
     }
 
@@ -108,7 +110,7 @@ internal class ClientGrpc(
 
                     ConnectivityState.READY -> {
                         //Log.e("state", "READY")
-                        chatListener?.onConnectionReady()
+                        grpcListeners.onConnectionReady()
                     }
 
                     ConnectivityState.IDLE -> {
@@ -310,20 +312,6 @@ internal class ClientGrpc(
     }
 
 
-    override fun startPing() {
-        make {
-            startPinging()
-        }
-    }
-
-
-    override fun stopPing() {
-        make {
-            stopPinging()
-        }
-    }
-
-
     override fun sendMessage(request: Request) {
         make {
             postData(request)
@@ -419,22 +407,17 @@ internal class ClientGrpc(
     }
 
 
-    fun setChatListener(l: GrpcChatMessageListener) {
-        this.chatListener = l
-    }
-
-
-    fun addListener(l: GrpcListener) {
+    override fun addListener(l: GrpcListener) {
         this.grpcListeners.addListener(l)
     }
 
 
-    fun removeListener(l: GrpcListener) {
+    override fun removeListener(l: GrpcListener) {
         this.grpcListeners.removeListener(l)
     }
 
 
-    fun removeAllListeners() {
+    override fun removeAllListeners() {
         this.grpcListeners.removeAllListeners()
     }
 
@@ -613,7 +596,7 @@ internal class ClientGrpc(
 
                 override fun onError(t: Throwable) {
                     logger.error("ClientGrpc",
-                        "inspectUnaryRequest: onError - ${t.message}"
+                        "inspectUnaryRequest: onError - ${t.localizedMessage}"
                     )
                     callback.onError(parseError(t))
                 }
@@ -689,7 +672,6 @@ internal class ClientGrpc(
                     val e = parseError(t)
 
                     grpcListeners.onConnectionError(e)
-                    chatListener?.onConnectionError(e)
                 }
 
 
@@ -728,7 +710,6 @@ internal class ClientGrpc(
             )
             response?.let {
                 grpcListeners.onResponse(it)
-                chatListener?.onResponse(it)
             }
 
         } else if (update.data.`is`(Messages.UpdateNewMessage::class.java)) {
@@ -737,7 +718,7 @@ internal class ClientGrpc(
                 "parseUpdate: UpdateNewMessage - $message"
             )
             message?.let {
-                chatListener?.onNewMessage(it)
+                grpcListeners.onNewMessage(it)
             }
 
         } else if (update.data.`is`(UpdateDisconnect::class.java)) {
@@ -750,23 +731,6 @@ internal class ClientGrpc(
                 "parseUpdate: notImplementedEvent - $update"
             )
         }
-    }
-
-
-    private fun startPinging() {
-        timer?.cancel()
-        timer = Timer()
-        timer?.scheduleAtFixedRate(object : TimerTask() {
-            override fun run() {
-                ping()
-            }
-        }, 0, 2000)
-    }
-
-
-    private fun stopPinging() {
-        timer?.cancel()
-        timer = null
     }
 
 
@@ -796,11 +760,6 @@ internal class ClientGrpc(
         }
 
         handler.post(job)
-    }
-
-
-    fun getConnectState(): ConnectState {
-        return connectState
     }
 
 

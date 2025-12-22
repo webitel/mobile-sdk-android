@@ -55,8 +55,11 @@ dependencies {
 
     //grpc dependency
     implementation 'io.grpc:grpc-okhttp:1.47.0'
-    implementation 'io.grpc:grpc-protobuf-lite:1.47.0'
     implementation 'io.grpc:grpc-stub:1.47.0'
+    implementation "io.grpc:grpc-protobuf:1.47.0"
+    implementation "com.google.protobuf:protobuf-java:3.25.1"
+    implementation "com.google.protobuf:protobuf-java-util:3.25.1"
+
     implementation 'org.apache.tomcat:annotations-api:6.0.53'
 }
 
@@ -72,11 +75,10 @@ protobuf {
     generateProtoTasks {
         all().each { task ->
             task.builtins {
-                java { option 'lite' }
+                java {}
             }
             task.plugins {
-                grpc {
-                    option 'lite' }
+                grpc {}
             }
         }
     }
@@ -108,7 +110,7 @@ afterEvaluate {
 
             groupId = "com.webitel"
             artifactId = "mobile-sdk"
-            version = "0.19.1"
+            version = "0.20.1"
         }
     }
 }

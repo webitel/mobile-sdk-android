@@ -1,12 +1,13 @@
 package com.webitel.mobile_sdk.data.portal
 
-import android.net.Uri
 import com.webitel.mobile_sdk.data.auth.AuthRepository
 import com.webitel.mobile_sdk.data.chats.WebitelChat
 import com.webitel.mobile_sdk.data.grps.ChannelConfig
+import com.webitel.mobile_sdk.data.grps.ChatApi
 import com.webitel.mobile_sdk.data.grps.ClientGrpc
 import com.webitel.mobile_sdk.data.repository.DeviceInfoRepository
 import com.webitel.mobile_sdk.data.repository.storage.DeviceInfoStorageSharedPref
+import com.webitel.mobile_sdk.data.wss.WebSocketClient
 import com.webitel.mobile_sdk.domain.ChatClient
 import com.webitel.mobile_sdk.domain.User
 import com.webitel.mobile_sdk.domain.CallbackListener
@@ -18,6 +19,12 @@ import com.webitel.mobile_sdk.domain.LoginListener
 import com.webitel.mobile_sdk.domain.PortalClient
 import com.webitel.mobile_sdk.domain.RegisterResult
 import com.webitel.mobile_sdk.domain.Session
+import androidx.core.net.toUri
+import com.webitel.mobile_sdk.data.chats.FileUploaderGRPC
+import com.webitel.mobile_sdk.data.wss.FileDownloaderHttp
+import com.webitel.mobile_sdk.data.wss.FileUploaderHttp
+import com.webitel.mobile_sdk.data.wss.HttpClientProvider
+import com.webitel.mobile_sdk.domain.Transport
 
 
 internal class WebitelPortalClient(
@@ -31,7 +38,7 @@ internal class WebitelPortalClient(
         )
     )
 
-    private val grpc: ClientGrpc
+    private val chatApi: ChatApi
     private val chat: WebitelChat
 
     private var userSession: UserSession? = null
@@ -49,18 +56,33 @@ internal class WebitelPortalClient(
 
     init {
         logger.level = client.logLevel
+        val config = getChannelConfig()
 
-        grpc = ClientGrpc(
-            getChannelConfig(),
-            logger
-        )
+        val isWebSocket = client.transport == Transport.WEBSOCKET
 
-        chat = WebitelChat(grpc, logger)
+        val api = if (isWebSocket)
+            WebSocketClient(config, logger)
+        else
+            ClientGrpc(config, logger)
 
-        authRepository = AuthRepository(grpc)
+        val httpProvider = api as? HttpClientProvider
 
-        grpc.setChatListener(chat)
-        grpc.addListener(authRepository)
+        val fileUploader = if (isWebSocket && httpProvider != null)
+            FileUploaderHttp(config, httpProvider)
+        else
+            FileUploaderGRPC(api)
+
+        val fileDownloaderHttp = if (isWebSocket && httpProvider != null)
+            FileDownloaderHttp(config, httpProvider)
+        else
+            null
+
+        chat = WebitelChat(api, logger, fileUploader, fileDownloaderHttp)
+        authRepository = AuthRepository(api)
+
+        api.addListener(chat)
+        api.addListener(authRepository)
+        chatApi = api
     }
 
 
@@ -150,31 +172,31 @@ internal class WebitelPortalClient(
 
 
     override fun getConnectState(): ConnectState {
-        return grpc.getConnectState()
+        return chatApi.getConnectState()
     }
 
 
     override fun addConnectListener(listener: ConnectListener) {
-        grpc.addConnectListener(listener)
+        chatApi.addConnectListener(listener)
     }
 
 
     override fun removeConnectListener(listener: ConnectListener) {
-        grpc.removeConnectListener(listener)
+        chatApi.removeConnectListener(listener)
     }
 
 
     override fun openConnect() {
-        grpc.openConnection()
+        chatApi.openConnection()
     }
 
     override fun closeConnect() {
-        grpc.closeConnection()
+        chatApi.closeConnection()
     }
 
 
     private fun getChannelConfig(): ChannelConfig {
-        val uri = Uri.parse(client.address)
+        val uri = client.address.toUri()
 
         if (uri.host.isNullOrEmpty())
             throw Exception("Bad address - ${client.address}")
@@ -190,7 +212,9 @@ internal class WebitelPortalClient(
             clientToken = client.token,
             deviceId = deviceId,
             keepAliveTime = client.keepAliveTime,
-            keepAliveTimeout = client.keepAliveTimeout
+            keepAliveTimeout = client.keepAliveTimeout,
+            scheme = uri.scheme ?: "https",
+            transport = client.transport
         )
     }
 
