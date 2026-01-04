@@ -491,6 +491,7 @@ enum class Code {
                 13 -> INTERNAL
                 14 -> UNAVAILABLE
                 15 -> DATA_LOSS
+                1008 -> UNAUTHENTICATED // WebSocket code error
                 else -> UNKNOWN
             }
         }

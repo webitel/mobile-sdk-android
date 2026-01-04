@@ -166,8 +166,7 @@ internal class WebSocketClient(
 
 
     override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
-        logger.warn(TAG, "onClosed: $code, $reason"
-        )
+        logger.warn(TAG, "onClosed: $code, $reason")
         val statusCode = Code.forNumber(code)
         val reason = Error(
             message = reason,
@@ -383,8 +382,11 @@ internal class WebSocketClient(
 
 
     private fun buildWebSocketRequest(): Request {
+        val portPart = if (config.port > 0) ":${config.port}" else ""
+        val url = "wss://${config.host}$portPart$WS_PATH"
+
         val builder = Request.Builder()
-            .url("wss://" + config.host + WS_PATH)
+            .url(url)
 
         headerProvider.commonHeaders().forEach { (k, v) ->
             builder.addHeader(k, v)
@@ -589,14 +591,31 @@ internal class WebSocketClient(
             }
 
         } else if (update.data.`is`(UpdateDisconnect::class.java)) {
-            logger.debug(TAG,
-                "parseUpdate: UpdateDisconnect - server closes connection..."
+            val disconnect = update.data.unpack(UpdateDisconnect::class.java)
+            logger.debug(
+                TAG,
+                "UpdateDisconnect: server closes stream. " +
+                        "code=${disconnect.cause.code}, message=${disconnect.cause.message}"
             )
+
+            try {
+                socket?.close(
+                    safeCloseCode(disconnect.cause.code),
+                    disconnect.cause.message
+                )
+            } catch (_: Exception) { }
 
         } else {
             logger.debug(TAG, "parseUpdate: notImplementedEvent - $update")
         }
     }
+
+
+    private fun safeCloseCode(code: Int): Int =
+        when (code) {
+            1004, 1005, 1006, 1015 -> 1000 // fallback
+            else -> code
+        }
 
 
     private fun inspectUnaryRequest(callback: CallbackListener<UserSession>) {
