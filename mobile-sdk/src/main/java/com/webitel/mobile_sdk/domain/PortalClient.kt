@@ -148,6 +148,8 @@ interface PortalClient {
         internal var keepAliveTimeout: Long = 10
         internal var transport: Transport = Transport.GRPC
 
+        internal var pinnedPublicKeyHashes: Set<String> = emptySet()
+
 
         /**
          * Sets the Android application display name.
@@ -171,6 +173,15 @@ interface PortalClient {
          * @return The Builder instance for method chaining.
          */
         fun deviceId(value: String) = apply { this.deviceId = value }
+
+
+        /**
+         * Configures SSL/TLS public key pinning for network connections created by the SDK.
+         *
+         * @param pins A list of Base64-encoded SHA-256 hashes of trusted public keys (SPKI).
+         *             At least one valid pin must match the server certificate chain.
+         */
+        fun pinnedPublicKeys(pins: Collection<String>) = apply { this.pinnedPublicKeyHashes = pins.toSet() }
 
 
         /**

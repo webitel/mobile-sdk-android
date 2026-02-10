@@ -11,5 +11,6 @@ internal data class ChannelConfig(
     val keepAliveTime: Long,
     val keepAliveTimeout: Long,
     val scheme: String,
-    val transport: Transport
+    val transport: Transport,
+    var pinnedHashes: Set<String>
 )

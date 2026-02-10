@@ -214,7 +214,8 @@ internal class WebitelPortalClient(
             keepAliveTime = client.keepAliveTime,
             keepAliveTimeout = client.keepAliveTimeout,
             scheme = uri.scheme ?: "https",
-            transport = client.transport
+            transport = client.transport,
+            pinnedHashes = client.pinnedPublicKeyHashes
         )
     }
 

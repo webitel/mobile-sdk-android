@@ -17,11 +17,13 @@ import com.webitel.mobile_sdk.domain.Code
 import com.webitel.mobile_sdk.domain.ConnectListener
 import com.webitel.mobile_sdk.domain.ConnectState
 import com.webitel.mobile_sdk.domain.Error
+import com.webitel.mobile_sdk.domain.LogLevel
 import com.webitel.mobile_sdk.domain.Member
 import com.webitel.mobile_sdk.domain.RegisterResult
 import com.webitel.mobile_sdk.domain.User
 import io.grpc.stub.ClientResponseObserver
 import io.grpc.stub.StreamObserver
+import okhttp3.CertificatePinner
 import okhttp3.HttpUrl
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
@@ -69,12 +71,20 @@ internal class WebSocketClient(
         const val PUSH_REGISTER_PATH = "/api/portal/device"
     }
 
-    val client = OkHttpClient.Builder()
-        .pingInterval(config.keepAliveTimeout, TimeUnit.SECONDS)
-        .callTimeout( config.keepAliveTimeout, TimeUnit.SECONDS)
-        .retryOnConnectionFailure(false)
-        .addInterceptor(HeaderInterceptor(headerProvider))
-        .build()
+
+    val client: OkHttpClient
+
+    init {
+        val clientBuilder = OkHttpClient.Builder()
+            .pingInterval(config.keepAliveTimeout, TimeUnit.SECONDS)
+            .callTimeout(config.keepAliveTimeout, TimeUnit.SECONDS)
+            .retryOnConnectionFailure(false)
+            .addInterceptor(HeaderInterceptor(headerProvider))
+
+        applyCertificatePinning(clientBuilder)
+
+        client = clientBuilder.build()
+    }
 
 
     override fun sendMessage(request: Connect.Request) {
@@ -141,10 +151,23 @@ internal class WebSocketClient(
             try { it.string() } catch (_: Exception) { null }
         }
 
+        val isCertError =
+            t is javax.net.ssl.SSLPeerUnverifiedException ||
+                    t.cause is javax.net.ssl.SSLPeerUnverifiedException ||
+                    (t.message?.contains("Certificate pinning", ignoreCase = true) == true)
+
         val errorMessage = when {
-            httpCode != null -> "WebSocket HTTP error: $httpCode $httpBody"
-            t.message != null -> "WebSocket error: ${t.message}"
-            else -> "Unknown WebSocket error"
+            httpCode != null ->
+                "WebSocket HTTP error: $httpCode $httpBody"
+
+            isCertError && logger.level != LogLevel.DEBUG ->
+                "WebSocket TLS error: certificate verification failed"
+
+            t.message != null ->
+                "WebSocket error: ${t.message}"
+
+            else ->
+                "Unknown WebSocket error"
         }
 
         val reason = Error(
@@ -186,6 +209,7 @@ internal class WebSocketClient(
 
     override fun openConnection() {
         runJob {
+            logger.debug(TAG, "openConnection requested by client, state=$connectState")
             openStream()
         }
     }
@@ -371,10 +395,13 @@ internal class WebSocketClient(
 
 
     private fun openStream() {
-        if (connectState == ConnectState.Ready) {
-            logger.warn(TAG, "openStream: stream is already open")
+        if (connectState == ConnectState.Ready || connectState == ConnectState.Connecting) {
+            logger.warn(TAG, "openStream: already $connectState")
             return
         }
+        val oldState = connectState
+        connectState = ConnectState.Connecting
+        connectionStateListeners.onStateChanged(from = oldState, to = ConnectState.Connecting)
         val request = buildWebSocketRequest()
         logger.debug(TAG, "open stream - $request")
         socket = client.newWebSocket(request, this)
@@ -700,6 +727,35 @@ internal class WebSocketClient(
                 logger.debug(TAG, "registerFcm: success")
                 return@safeCall RegisterResult()
             }
+        }
+    }
+
+
+    private fun applyCertificatePinning(builder: OkHttpClient.Builder) {
+        if (config.pinnedHashes.isEmpty()) return
+
+        val normalizedPins = config.pinnedHashes
+            .asSequence()
+            .map { it.trim() }
+            .filter { it.isNotEmpty() }
+            .map { normalizeSha256Pin(it) }
+            .toList()
+
+        if (normalizedPins.isEmpty()) return
+
+        val certificatePinner = CertificatePinner.Builder()
+            .add(config.host, *normalizedPins.toTypedArray())
+            .build()
+
+        builder.certificatePinner(certificatePinner)
+    }
+
+
+    private fun normalizeSha256Pin(pin: String): String {
+        return if (pin.startsWith("sha256/")) {
+            pin
+        } else {
+            "sha256/$pin"
         }
     }
 
