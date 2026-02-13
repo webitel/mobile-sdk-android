@@ -66,9 +66,9 @@ internal class WebSocketClient(
     private companion object {
         const val TAG = "WebSocketClient"
         const val WS_PATH = "/portal/ws"
-        const val TOKEN_PATH = "/api/portal/token"
-        const val LOGOUT_PATH = "/api/portal/logout"
-        const val PUSH_REGISTER_PATH = "/api/portal/device"
+        const val TOKEN_PATH = "api/portal/token"
+        const val LOGOUT_PATH = "api/portal/logout"
+        const val PUSH_REGISTER_PATH = "api/portal/device"
     }
 
 

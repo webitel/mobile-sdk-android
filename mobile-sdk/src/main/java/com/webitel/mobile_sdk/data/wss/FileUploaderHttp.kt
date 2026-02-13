@@ -37,7 +37,7 @@ internal class FileUploaderHttp(private val config: ChannelConfig, private val h
     private companion object {
         const val TAG = "FileUploaderHttp"
         const val BUFFER_SIZE = 4 * 1024
-        const val UPLOAD_PATH = "/portal/files"
+        const val UPLOAD_PATH = "portal/files"
     }
 
 

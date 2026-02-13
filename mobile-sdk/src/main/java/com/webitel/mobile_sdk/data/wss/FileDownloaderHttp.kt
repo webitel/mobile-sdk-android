@@ -25,7 +25,7 @@ internal class FileDownloaderHttp(
     private companion object {
         const val TAG = "FileDownloaderHttp"
         const val BUFFER_SIZE = 4 * 1024
-        const val DOWNLOAD_PATH = "/portal/files"
+        const val DOWNLOAD_PATH = "portal/files"
     }
 
     private val workerThread = HandlerThread("FileDownloaderHttp").apply { start() }
