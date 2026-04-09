@@ -119,10 +119,7 @@ internal class FileUploaderHttp(private val config: ChannelConfig, private val h
                 }
             }
 
-            val url = HttpUrl.Builder()
-                .scheme(config.scheme)
-                .host(config.host)
-                .addPathSegments(UPLOAD_PATH)
+            val url = baseURLBuilder(UPLOAD_PATH)
                 .addQueryParameter("uploadId", uploadId)
                 .build()
 
@@ -211,10 +208,7 @@ internal class FileUploaderHttp(private val config: ChannelConfig, private val h
         val requestBody = jsonString.toRequestBody("application/json".toMediaType())
         logger.debug(TAG, "newUpload: send $jsonString")
 
-        val url = HttpUrl.Builder()
-            .scheme(config.scheme)
-            .host(config.host)
-            .addPathSegments(UPLOAD_PATH)
+        val url = baseURLBuilder(UPLOAD_PATH)
             .build()
 
         val httpRequest = Request.Builder()
@@ -255,10 +249,7 @@ internal class FileUploaderHttp(private val config: ChannelConfig, private val h
 
     private fun resumeUpload(pid: String, process: TransferProcess) : Long {
         logger.debug(TAG, "resumeUpload: with uploadId $pid")
-        val url = HttpUrl.Builder()
-            .scheme(config.scheme)
-            .host(config.host)
-            .addPathSegments(UPLOAD_PATH)
+        val url = baseURLBuilder(UPLOAD_PATH)
             .addQueryParameter("uploadId", pid)
             .build()
 
@@ -309,6 +300,23 @@ internal class FileUploaderHttp(private val config: ChannelConfig, private val h
             .writeTimeout(0, TimeUnit.SECONDS)
             .readTimeout(0, TimeUnit.SECONDS)
             .build()
+    }
+
+
+    private fun baseURLBuilder(path: String): HttpUrl.Builder {
+        val builder = HttpUrl.Builder()
+            .scheme(config.scheme)
+            .host(config.host)
+
+        if (config.port > 0) {
+            builder.port(config.port)
+        }
+
+        builder.addPathSegments(
+            path.trimStart('/')
+        )
+
+        return builder
     }
 
 

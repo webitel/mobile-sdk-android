@@ -40,13 +40,17 @@ internal class FileDownloaderHttp(
         var call: Call? = null
 
         runJob {
-            val url = HttpUrl.Builder()
+            val urlBuilder = HttpUrl.Builder()
                 .scheme(config.scheme)
                 .host(config.host)
                 .addPathSegments(DOWNLOAD_PATH)
                 .addPathSegments(request.fileId)
-                .build()
 
+            if (config.port > 0) {
+                urlBuilder.port(config.port)
+            }
+
+            val url = urlBuilder.build()
             logger.debug(TAG, "Download url: $url")
 
             val requestBuilder = Request.Builder()

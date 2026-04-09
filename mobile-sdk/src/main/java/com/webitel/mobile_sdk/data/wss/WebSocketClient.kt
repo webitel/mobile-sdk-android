@@ -427,12 +427,7 @@ internal class WebSocketClient(
         return safeCall {
             logger.debug(TAG, "Calling inspect()")
 
-            val url = HttpUrl.Builder()
-                .scheme(config.scheme)
-                .host(config.host)
-                .addPathSegments(TOKEN_PATH)
-                .build()
-
+            val url = buildURL(TOKEN_PATH)
             val httpRequest = Request.Builder()
                 .url(url)
                 .get()
@@ -461,11 +456,8 @@ internal class WebSocketClient(
             val json = ProtoJson.toJson(request)
             val body = json.toRequestBody("application/json".toMediaType())
 
-            val url = HttpUrl.Builder()
-                .scheme(config.scheme)
-                .host(config.host)
-                .addPathSegments(TOKEN_PATH)
-                .build()
+            val url = buildURL(TOKEN_PATH)
+            logger.debug(TAG, "userLogin: $url")
 
             val httpRequest = Request.Builder()
                 .url(url)
@@ -503,12 +495,7 @@ internal class WebSocketClient(
             val json = ProtoJson.toJson(request)
             val body = json.toRequestBody("application/json".toMediaType())
 
-            val url = HttpUrl.Builder()
-                .scheme(config.scheme)
-                .host(config.host)
-                .addPathSegments(LOGOUT_PATH)
-                .build()
-
+            val url = buildURL(LOGOUT_PATH)
             val httpRequest = Request.Builder()
                 .url(url)
                 .post(body)
@@ -696,12 +683,7 @@ internal class WebSocketClient(
             val json = ProtoJson.toJson(request)
             val body = json.toRequestBody("application/json".toMediaType())
 
-            val url = HttpUrl.Builder()
-                .scheme(config.scheme)
-                .host(config.host)
-                .addPathSegments(PUSH_REGISTER_PATH)
-                .build()
-
+            val url = buildURL(PUSH_REGISTER_PATH)
             val httpRequest = Request.Builder()
                 .url(url)
                 .post(body)
@@ -728,6 +710,23 @@ internal class WebSocketClient(
                 return@safeCall RegisterResult()
             }
         }
+    }
+
+
+    private fun buildURL(path: String): HttpUrl {
+        val builder = HttpUrl.Builder()
+            .scheme(config.scheme)
+            .host(config.host)
+
+        if (config.port > 0) {
+            builder.port(config.port)
+        }
+
+        builder.addPathSegments(
+            path.trimStart('/')
+        )
+
+        return builder.build()
     }
 
 
