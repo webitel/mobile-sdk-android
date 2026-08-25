@@ -153,16 +153,6 @@ internal class FileDownloaderHttp(
         val message = "HTTP error: ${response.code} ${response.message} ${body ?: ""}"
         logger.error(TAG, message)
 
-        return Error(message, getCode(response.code))
-    }
-
-
-    private fun getCode(httpCode: Int) : Code {
-        return when (httpCode) {
-            401 -> Code.UNAUTHENTICATED
-            400 -> Code.FAILED_PRECONDITION
-            500 -> Code.INTERNAL
-            else -> Code.UNKNOWN
-        }
+        return Error(message, ErrorCodeMapper.fromHttpStatus(response.code))
     }
 }

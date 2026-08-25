@@ -172,7 +172,7 @@ internal class WebSocketClient(
 
         val reason = Error(
             message = errorMessage,
-            code = getCode(httpCode ?: -1)
+            code = ErrorCodeMapper.fromHttpStatus(httpCode ?: -1)
         )
 
         val state = ConnectState.Disconnected(reason)
@@ -437,7 +437,7 @@ internal class WebSocketClient(
                 if (!response.isSuccessful) {
                     val errorMessage = response.body?.string()
                     logger.error(TAG, "inspect: ${response.code}; $errorMessage")
-                    throw Error("HTTP error $errorMessage", getCode(response.code))
+                    throw Error("HTTP error $errorMessage", ErrorCodeMapper.fromHttpStatus(response.code))
                 }
 
                 val bodyString = response.body?.string() ?: run {
@@ -468,7 +468,7 @@ internal class WebSocketClient(
                 if (!response.isSuccessful) {
                     val errorMessage = response.body?.string()
                     logger.error(TAG, "userLogin: ${response.code} $errorMessage")
-                    throw Error("HTTP error $errorMessage", getCode(response.code))
+                    throw Error("HTTP error $errorMessage", ErrorCodeMapper.fromHttpStatus(response.code))
                 }
 
                 val bodyString = response.body?.string() ?: run {
@@ -505,7 +505,7 @@ internal class WebSocketClient(
                 if (!response.isSuccessful) {
                     val errorMessage = response.body?.string()
                     logger.error(TAG, "logout: ${response.code} $errorMessage")
-                    throw Error("HTTP error ${response.code} $errorMessage", getCode(response.code))
+                    throw Error("HTTP error ${response.code} $errorMessage", ErrorCodeMapper.fromHttpStatus(response.code))
                 }
 
                 logger.debug(TAG, "logout: success")
@@ -650,16 +650,6 @@ internal class WebSocketClient(
     }
 
 
-    private fun getCode(httpCode: Int) : Code {
-        return when (httpCode) {
-            401 -> Code.UNAUTHENTICATED
-            400 -> Code.FAILED_PRECONDITION
-            500 -> Code.INTERNAL
-            else -> Code.UNKNOWN
-        }
-    }
-
-
     private fun enqueueRequest(request: Connect.Request) {
         logger.debug(TAG, "enqueueRequest: $request")
         pendingRequests.add(request)
@@ -700,7 +690,7 @@ internal class WebSocketClient(
 
                     val reason = Error(
                         message = "WebSocket HTTP error: $httpCode $httpBody",
-                        code = getCode(httpCode)
+                        code = ErrorCodeMapper.fromHttpStatus(httpCode)
                     )
                     logger.error(TAG, "registerFcm: ${response.code} ${response.message}")
                     throw reason

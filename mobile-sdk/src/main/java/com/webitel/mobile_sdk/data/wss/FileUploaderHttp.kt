@@ -151,13 +151,9 @@ internal class FileUploaderHttp(private val config: ChannelConfig, private val h
                             try { it.string() } catch (_: Exception) { null }
                         }
 
-                        val reason = Error(
-                            message = "$httpCode $httpBody",
-                            code = getCode(httpCode)
-                        )
                         logger.error(TAG,
                             "upload: onResponse ${response.code} ${response.message}")
-                        request.callback.onError( reason)
+                        request.callback.onError( createHttpError(httpCode, httpBody))
                         return
                     }
                     try {
@@ -230,13 +226,9 @@ internal class FileUploaderHttp(private val config: ChannelConfig, private val h
                     }
                 }
 
-                val reason = Error(
-                    message = "$httpCode $httpBody",
-                    code = getCode(httpCode)
-                )
                 logger.error(TAG,
                     "newUpload: ${response.code} $httpBody")
-                throw reason
+                throw createHttpError(httpCode, httpBody)
             }
             val jsonResponse = JSONObject(response.body?.string() ?: "")
             logger.debug(TAG, "newUpload: $jsonResponse")
@@ -268,13 +260,9 @@ internal class FileUploaderHttp(private val config: ChannelConfig, private val h
                     try { it.string() } catch (_: Exception) { null }
                 }
 
-                val reason = Error(
-                    message = "$httpCode $httpBody",
-                    code = getCode(httpCode)
-                )
                 logger.error(TAG,
                     "resumeUpload: ${response.code} $httpBody")
-                throw reason
+                throw createHttpError(httpCode, httpBody)
             }
 
             val jsonResponse = JSONObject(response.body?.string() ?: "")
@@ -320,14 +308,14 @@ internal class FileUploaderHttp(private val config: ChannelConfig, private val h
     }
 
 
-
-    private fun getCode(httpCode: Int) : Code {
-        return when (httpCode) {
-            401 -> Code.UNAUTHENTICATED
-            400 -> Code.FAILED_PRECONDITION
-            500 -> Code.INTERNAL
-            else -> Code.UNKNOWN
-        }
+    private fun createHttpError(
+        httpCode: Int,
+        httpBody: String?
+    ): Error {
+        return Error(
+            message = "$httpCode; $httpBody",
+            code = ErrorCodeMapper.fromHttpStatus(httpCode)
+        )
     }
 
 

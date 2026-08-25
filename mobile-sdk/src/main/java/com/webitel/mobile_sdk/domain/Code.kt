@@ -154,6 +154,16 @@ enum class Code {
 
     /**
      * <pre>
+     * The request contains a media type or file format that is not supported.
+     * HTTP Mapping: 415 Unsupported Media Type
+     * </pre>
+     *
+     * `UNSUPPORTED_MEDIA_TYPE`
+     */
+    UNSUPPORTED_MEDIA_TYPE,
+
+    /**
+     * <pre>
      * The operation was aborted, typically due to a concurrency issue such as
      * a sequencer check failure or transaction abort.
      * See the guidelines above for deciding between `FAILED_PRECONDITION`,
